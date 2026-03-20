@@ -29,6 +29,22 @@
 		return date;
 	}
 
+	let searchInput: HTMLInputElement;
+
+	function handleKeydown(e: KeyboardEvent) {
+		if (e.key === 'Escape') {
+			search = '';
+			activeCategory = 'All';
+			searchInput.blur();
+			return;
+		}
+		if (e.key === 'f' && !e.metaKey && !e.ctrlKey && !e.altKey && !(e.target instanceof HTMLInputElement)) {
+			e.preventDefault();
+			searchInput.focus();
+			searchInput.select();
+		}
+	}
+
 	let copied = $state('');
 
 	async function copyVersion(version: string) {
@@ -65,6 +81,8 @@
 	</span>
 {/snippet}
 
+<svelte:window onkeydown={handleKeydown} />
+
 <div class="container">
 	<header>
 		<div class="header-top">
@@ -75,12 +93,20 @@
 			</span>
 		</div>
 		<div class="controls">
-			<input
-				type="search"
-				placeholder="Search..."
-				bind:value={search}
-				class="search"
-			/>
+			<div class="search-wrapper">
+				<input
+					type="search"
+					placeholder="Search..."
+					bind:value={search}
+					bind:this={searchInput}
+					class="search"
+				/>
+				{#if search}
+					<button class="search-clear" onclick={() => { search = ''; searchInput.focus(); }} title="Clear (Esc)">✕</button>
+				{:else}
+					<span class="search-kbd">F</span>
+				{/if}
+			</div>
 			<div class="categories">
 				{#each categories() as cat}
 					<button
@@ -238,20 +264,64 @@
 		gap: 0.75rem;
 	}
 
+	.search-wrapper {
+		position: relative;
+	}
+
 	.search {
 		width: 100%;
 		padding: 0.6rem 0.9rem;
+		padding-right: 2rem;
 		border: 1px solid #ddd;
 		border-radius: 6px;
 		font-size: 0.95rem;
 		background: white;
 		box-sizing: border-box;
+		transition: border-color 0.15s, box-shadow 0.15s;
 	}
 
 	.search:focus {
 		outline: none;
 		border-color: #4a90d9;
-		box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.2);
+		box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.3);
+	}
+
+	.search-clear {
+		position: absolute;
+		right: 0.5rem;
+		top: 50%;
+		transform: translateY(-50%);
+		background: none;
+		border: none;
+		color: #999;
+		cursor: pointer;
+		font-size: 0.85rem;
+		padding: 0.2rem 0.3rem;
+		line-height: 1;
+		border-radius: 3px;
+	}
+
+	.search-clear:hover {
+		color: #333;
+		background: #eee;
+	}
+
+	.search-kbd {
+		position: absolute;
+		right: 0.5rem;
+		top: 50%;
+		transform: translateY(-50%);
+		font-size: 0.75rem;
+		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+		font-weight: 500;
+		color: #999;
+		background: #f5f5f5;
+		border: 1px solid #ddd;
+		border-radius: 4px;
+		padding: 0.1rem 0.4rem;
+		line-height: 1.4;
+		pointer-events: none;
+		box-shadow: 0 1px 0 #ccc;
 	}
 
 	.categories {
