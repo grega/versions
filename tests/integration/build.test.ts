@@ -14,7 +14,7 @@ describe('static build', () => {
 		const html = readFileSync(resolve(root, 'build/index.html'), 'utf-8');
 
 		expect(html).toContain('Versions');
-		expect(html).toContain('Search packages');
+		expect(html).toContain('Search');
 	});
 
 	it('data file contains package data', () => {

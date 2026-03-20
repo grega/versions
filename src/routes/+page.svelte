@@ -77,7 +77,7 @@
 		<div class="controls">
 			<input
 				type="search"
-				placeholder="Search packages..."
+				placeholder="Search..."
 				bind:value={search}
 				class="search"
 			/>
