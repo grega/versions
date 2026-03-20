@@ -1,0 +1,51 @@
+packages:
+  - name: Homebrew
+    source: github
+    repo: Homebrew/brew
+    category: Tools
+    url: https://github.com/Homebrew/brew/releases
+
+  - name: Node.js
+    source: nodejs
+    category: Languages
+    url: https://nodejs.org/en/about/previous-releases
+
+  - name: npm
+    source: npm
+    package: npm
+    category: Tools
+    url: https://github.com/npm/cli/releases
+
+  - name: PostgreSQL
+    source: github
+    repo: postgres/postgres
+    tagPattern: "^REL_\\d+_\\d+$"
+    tagReplace:
+      "REL_": ""
+      "_": "."
+    category: Databases
+    url: https://www.postgresql.org/docs/release/
+
+  - name: Python
+    source: endoflife
+    product: python
+    category: Languages
+    url: https://www.python.org/downloads/
+
+  - name: Rails
+    source: rubygems
+    gem: rails
+    category: Frameworks
+    url: https://rubygems.org/gems/rails
+
+  - name: Ruby
+    source: github
+    repo: ruby/ruby
+    category: Languages
+    url: https://www.ruby-lang.org/en/downloads/releases/
+
+  - name: Terraform
+    source: github
+    repo: hashicorp/terraform
+    category: DevOps
+    url: https://github.com/hashicorp/terraform/releases
