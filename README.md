@@ -56,6 +56,15 @@ Example:
 
 Rebuild to pick up changes.
 
+## Testing
+
+```
+npm test            # run all tests once
+npm run test:watch  # re-run on file changes
+```
+
+Unit tests cover each fetcher (GitHub, RubyGems, npm, PyPI, Node.js, endoflife.date) with mocked API responses, plus config validation and a build smoke test. CI runs automatically on push and PRs via GitHub Actions.
+
 ## How it works
 
 At build time, `+page.server.ts` reads `packages.yml`, calls the appropriate API for each package via fetchers in `src/lib/fetchers/`, normalises the results, and passes them to the Svelte page. SvelteKit's static adapter renders everything to plain HTML with the data embedded. Client-side JS handles search, filtering, and expand/collapse — no further network requests.

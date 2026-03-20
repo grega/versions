@@ -1,0 +1,5 @@
+[
+  {"cycle": "3.14", "latest": "3.14.3", "latestReleaseDate": "2026-02-03", "releaseDate": "2025-10-01", "eol": false, "lts": false},
+  {"cycle": "3.13", "latest": "3.13.12", "latestReleaseDate": "2026-02-03", "releaseDate": "2024-10-01", "eol": false, "lts": false},
+  {"cycle": "3.12", "latest": "3.12.13", "latestReleaseDate": "2026-03-03", "releaseDate": "2023-10-02", "eol": false, "lts": false}
+]
