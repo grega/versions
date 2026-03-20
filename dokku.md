@@ -21,8 +21,9 @@ dokku docker-options:add versions build "--build-arg GITHUB_TOKEN=ghp_your_token
 If you use [Plausible](https://plausible.io/) for analytics, set the domain to enable the tracking script:
 
 ```bash
-dokku config:set versions PLAUSIBLE_DOMAIN=versions.yourdomain.com
+dokku config:set versions PLAUSIBLE_DOMAIN=versions.yourdomain.com PLAUSIBLE_ENDPOINT=https://analytics.yourdomain.com
 dokku docker-options:add versions build "--build-arg PLAUSIBLE_DOMAIN=versions.yourdomain.com"
+dokku docker-options:add versions build "--build-arg PLAUSIBLE_ENDPOINT=https://analytics.yourdomain.com"
 dokku ps:rebuild versions
 ```
 
