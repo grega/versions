@@ -4,6 +4,7 @@ COPY package*.json ./
 RUN npm ci
 COPY . .
 ARG GITHUB_TOKEN
-RUN GITHUB_TOKEN=$GITHUB_TOKEN npm run build
+ARG PLAUSIBLE_DOMAIN
+RUN GITHUB_TOKEN=$GITHUB_TOKEN PLAUSIBLE_DOMAIN=$PLAUSIBLE_DOMAIN npm run build
 EXPOSE 5000
 CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "5000"]
