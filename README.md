@@ -4,7 +4,7 @@ A dashboard that shows the latest versions of languages, tools, and libraries in
 
 ## Prerequisites
 
-Node.js 22+ is required. If you use [asdf](https://asdf-vm.com/), the `.tool-versions` file has you covered:
+Use [asdf](https://asdf-vm.com/) to install Node.js:
 
 ```
 asdf install
