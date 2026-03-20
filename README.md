@@ -2,6 +2,8 @@
 
 A dashboard that shows the latest versions of languages, tools, and libraries in one place. Built with SvelteKit and generates a fully static site at build time — no runtime API calls from the browser.
 
+https://versions.gregdev.com
+
 ## Prerequisites
 
 Use [asdf](https://asdf-vm.com/) to install Node.js:
