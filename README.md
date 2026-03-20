@@ -1,6 +1,6 @@
 # Versions
 
-A dashboard that shows the latest versions of languages, tools, and libraries in one place. Built with SvelteKit and generates a fully static site at build time — no runtime API calls from the browser.
+A dashboard that shows the version information for a selection of languages, tools, and libraries in one place.
 
 https://versions.gregdev.com
 
@@ -22,7 +22,7 @@ npm run dev
 
 Open http://localhost:5173. The dev server fetches version data live on each page load.
 
-A `GITHUB_TOKEN` is needed to avoid GitHub API rate limits (60 req/hr without one, 5,000 with). Create a token at https://github.com/settings/tokens — no scopes needed for public repos.
+A `GITHUB_TOKEN` is needed to avoid GitHub API rate limits (60 req/hr without one, 5,000 with). Create a token at https://github.com/settings/tokens - no scopes needed for public repos.
 
 ## Building
 
@@ -69,11 +69,11 @@ Unit tests cover each fetcher (GitHub, RubyGems, npm, PyPI, Node.js, endoflife.d
 
 ## How it works
 
-At build time, `+page.server.ts` reads `packages.yml`, calls the appropriate API for each package via fetchers in `src/lib/fetchers/`, normalises the results, and passes them to the Svelte page. SvelteKit's static adapter renders everything to plain HTML with the data embedded. Client-side JS handles search, filtering, and expand/collapse — no further network requests.
+At build time, `+page.server.ts` reads `packages.yml`, calls the appropriate API for each package via fetchers in `src/lib/fetchers/`, normalises the results, and passes them to the Svelte page. SvelteKit's static adapter renders everything to plain HTML with the data embedded. Client-side JS handles search, filtering, and expand/collapse - no further network requests.
 
 ## Deployment
 
-See [dokku.md](dokku.md) for full setup instructions — creating the app, configuring the domain, setting the GitHub token, and scheduling rebuilds via cron.
+See [dokku.md](dokku.md) for full setup instructions - creating the app, configuring the domain, setting the GitHub token, and scheduling rebuilds via cron.
 
 The short version:
 
@@ -82,4 +82,4 @@ git remote add dokku dokku@your-server:versions
 git push dokku main
 ```
 
-The Dockerfile builds and serves the static site with Node.js. An `app.json` cron task runs `npm run build` every 6 hours inside the container to keep data fresh — no extra server-side setup needed.
+The Dockerfile builds and serves the static site with Node.js. An `app.json` cron task runs `npm run build` every 6 hours in order to update the version data.
