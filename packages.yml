@@ -1,21 +1,85 @@
 packages:
-  - name: Homebrew
-    source: github
-    repo: Homebrew/brew
-    category: Tools
-    url: https://github.com/Homebrew/brew/releases
+  # Languages & Runtimes
+  - name: Elixir
+    source: endoflife
+    product: elixir
+    category: Languages
+    url: https://github.com/elixir-lang/elixir/releases
+
+  - name: Go
+    source: endoflife
+    product: go
+    category: Languages
+    url: https://go.dev/dl/
 
   - name: Node.js
     source: nodejs
     category: Languages
     url: https://nodejs.org/en/about/previous-releases
 
-  - name: npm
-    source: npm
-    package: npm
-    category: Tools
-    url: https://github.com/npm/cli/releases
+  - name: Python
+    source: endoflife
+    product: python
+    category: Languages
+    url: https://www.python.org/downloads/
 
+  - name: Ruby
+    source: github
+    repo: ruby/ruby
+    category: Languages
+    url: https://www.ruby-lang.org/en/downloads/releases/
+
+  # Frameworks & Libraries
+  - name: Rails
+    source: rubygems
+    gem: rails
+    category: Frameworks
+    url: https://rubygems.org/gems/rails
+
+  - name: Svelte
+    source: npm
+    package: svelte
+    category: Frameworks
+    url: https://github.com/sveltejs/svelte/releases
+
+  - name: SvelteKit
+    source: npm
+    package: "@sveltejs/kit"
+    category: Frameworks
+    url: https://github.com/sveltejs/kit/releases
+
+  - name: Vite
+    source: npm
+    package: vite
+    category: Frameworks
+    url: https://github.com/vitejs/vite/releases
+
+  # Ruby Ecosystem
+  - name: Bundler
+    source: rubygems
+    gem: bundler
+    category: Ruby
+    url: https://rubygems.org/gems/bundler
+
+  - name: Puma
+    source: rubygems
+    gem: puma
+    category: Ruby
+    url: https://rubygems.org/gems/puma
+
+  - name: RubyGems
+    source: github
+    repo: rubygems/rubygems
+    category: Ruby
+    url: https://github.com/rubygems/rubygems/releases
+
+  - name: Sidekiq
+    source: rubygems
+    gem: sidekiq
+    category: Ruby
+    url: https://rubygems.org/gems/sidekiq
+
+  # Databases
   - name: PostgreSQL
     source: github
     repo: postgres/postgres
@@ -26,26 +90,83 @@ packages:
     category: Databases
     url: https://www.postgresql.org/docs/release/
 
-  - name: Python
+  - name: Redis
     source: endoflife
-    product: python
-    category: Languages
-    url: https://www.python.org/downloads/
+    product: redis
+    category: Databases
+    url: https://redis.io/downloads/
 
-  - name: Rails
-    source: rubygems
-    gem: rails
-    category: Frameworks
-    url: https://rubygems.org/gems/rails
-
-  - name: Ruby
+  - name: SQLite
     source: github
-    repo: ruby/ruby
-    category: Languages
-    url: https://www.ruby-lang.org/en/downloads/releases/
+    repo: sqlite/sqlite
+    tagPattern: "^version-"
+    tagReplace:
+      "version-": ""
+    category: Databases
+    url: https://www.sqlite.org/changes.html
+
+  # DevOps & Infra
+  - name: Ansible
+    source: github
+    repo: ansible/ansible
+    category: DevOps
+    url: https://github.com/ansible/ansible/releases
+
+  - name: Docker
+    source: github
+    repo: moby/moby
+    tagPattern: "^docker-v"
+    tagReplace:
+      "docker-v": ""
+    category: DevOps
+    url: https://github.com/moby/moby/releases
+
+  - name: Dokku
+    source: github
+    repo: dokku/dokku
+    category: DevOps
+    url: https://github.com/dokku/dokku/releases
+
+  - name: Nginx
+    source: endoflife
+    product: nginx
+    category: DevOps
+    url: https://nginx.org/en/CHANGES
 
   - name: Terraform
     source: github
     repo: hashicorp/terraform
     category: DevOps
     url: https://github.com/hashicorp/terraform/releases
+
+  # Tools
+  - name: asdf
+    source: github
+    repo: asdf-vm/asdf
+    category: Tools
+    url: https://github.com/asdf-vm/asdf/releases
+
+  - name: Git
+    source: github
+    repo: git/git
+    tagPattern: "^v\\d+\\.\\d+\\.\\d+$"
+    category: Tools
+    url: https://git-scm.com/
+
+  - name: Homebrew
+    source: github
+    repo: Homebrew/brew
+    category: Tools
+    url: https://github.com/Homebrew/brew/releases
+
+  - name: npm
+    source: npm
+    package: npm
+    category: Tools
+    url: https://github.com/npm/cli/releases
+
+  - name: TypeScript
+    source: npm
+    package: typescript
+    category: Tools
+    url: https://github.com/microsoft/TypeScript/releases

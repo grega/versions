@@ -9,14 +9,34 @@ function headers(): Record<string, string> {
 	return h;
 }
 
-async function fetchReleases(repo: string): Promise<Release[]> {
-	const url = `https://api.github.com/repos/${repo}/releases?per_page=15`;
+function cleanVersion(tag: string, tagReplace?: Record<string, string>): string {
+	let version = tag;
+	if (tagReplace) {
+		for (const [from, to] of Object.entries(tagReplace)) {
+			version = version.replaceAll(from, to);
+		}
+	}
+	return version.replace(/^v/, '').replaceAll('_', '.');
+}
+
+async function fetchReleases(
+	repo: string,
+	tagPattern?: string,
+	tagReplace?: Record<string, string>
+): Promise<Release[]> {
+	const url = `https://api.github.com/repos/${repo}/releases?per_page=30`;
 	const res = await fetch(url, { headers: headers() });
 	if (!res.ok) throw new Error(`GitHub releases API returned ${res.status}`);
 	const data = await res.json();
 
-	return data.map((r: Record<string, unknown>) => ({
-		version: String(r.tag_name).replace(/^v/, '').replaceAll('_', '.'),
+	let filtered = data;
+	if (tagPattern) {
+		const regex = new RegExp(tagPattern);
+		filtered = data.filter((r: Record<string, unknown>) => regex.test(String(r.tag_name)));
+	}
+
+	return filtered.slice(0, 15).map((r: Record<string, unknown>) => ({
+		version: cleanVersion(String(r.tag_name), tagReplace),
 		date: String(r.published_at).split('T')[0],
 		prerelease: Boolean(r.prerelease),
 		lts: false,
@@ -37,26 +57,29 @@ async function fetchTags(
 	const regex = new RegExp(tagPattern);
 	const filtered = data.filter((t: Record<string, unknown>) => regex.test(String(t.name)));
 
-	return filtered.slice(0, 15).map((t: Record<string, unknown>) => {
-		let version = String(t.name);
-		for (const [from, to] of Object.entries(tagReplace)) {
-			version = version.replaceAll(from, to);
-		}
-		return {
-			version,
-			date: '',
-			prerelease: false,
-			lts: false,
-			url: `https://github.com/${repo}/releases/tag/${t.name}`
-		};
-	});
+	return filtered.slice(0, 15).map((t: Record<string, unknown>) => ({
+		version: cleanVersion(String(t.name), tagReplace),
+		date: '',
+		prerelease: false,
+		lts: false,
+		url: `https://github.com/${repo}/releases/tag/${t.name}`
+	}));
 }
 
 export async function fetchGitHub(config: PackageConfig): Promise<PackageInfo> {
 	const repo = config.repo!;
-	const releases = config.tagPattern
-		? await fetchTags(repo, config.tagPattern, config.tagReplace ?? {})
-		: await fetchReleases(repo);
+
+	let releases: Release[];
+	if (config.tagPattern) {
+		// Try releases API first (has dates + prerelease info)
+		releases = await fetchReleases(repo, config.tagPattern, config.tagReplace);
+		// Fall back to tags API if no releases matched
+		if (releases.length === 0) {
+			releases = await fetchTags(repo, config.tagPattern, config.tagReplace ?? {});
+		}
+	} else {
+		releases = await fetchReleases(repo);
+	}
 
 	const stableReleases = releases.filter((r) => !r.prerelease);
 
