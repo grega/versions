@@ -1,10 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { execSync } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
 import { resolve } from 'path';
 
 const root = resolve(import.meta.dirname, '../..');
-
 describe('static build', () => {
 	it('produces build output', () => {
 		expect(existsSync(resolve(root, 'build/index.html'))).toBe(true);
