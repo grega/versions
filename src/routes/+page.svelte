@@ -69,6 +69,7 @@
 	<header>
 		<div class="header-top">
 			<h1>Versions</h1>
+			<p class="tagline">Release information for a selection of languages, frameworks, and tools</p>
 			<span class="built-at">
 				Updated {timeSince(data.builtAt)} &middot; {new Date(data.builtAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
 			</span>
@@ -219,9 +220,16 @@
 		font-weight: 700;
 	}
 
-	.built-at {
+	.tagline {
+		margin: 0;
 		color: #666;
-		font-size: 0.85rem;
+		font-size: 0.9rem;
+	}
+
+	.built-at {
+		color: #999;
+		font-size: 0.8rem;
+		margin-left: auto;
 	}
 
 	.controls {
