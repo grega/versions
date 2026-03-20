@@ -80,4 +80,4 @@ git remote add dokku dokku@your-server:versions
 git push dokku main
 ```
 
-The Dockerfile runs a multi-stage build (Node.js fetches data, then nginx serves static files). A cron job on the server runs `dokku ps:rebuild versions` every 6 hours to keep data fresh.
+The Dockerfile builds and serves the static site with Node.js. An `app.json` cron task runs `npm run build` every 6 hours inside the container to keep data fresh — no extra server-side setup needed.

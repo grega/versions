@@ -9,9 +9,10 @@ dokku apps:create versions
 
 ## Set the GitHub token
 
-The token is passed as a Docker build arg so it's available when fetching version data during `npm run build`. It is not present in the final image.
+The token is needed both at build time (initial deploy) and at runtime (scheduled rebuilds via `app.json` cron).
 
 ```bash
+dokku config:set versions GITHUB_TOKEN=ghp_your_token_here
 dokku docker-options:add versions build "--build-arg GITHUB_TOKEN=ghp_your_token_here"
 ```
 
@@ -36,24 +37,18 @@ git remote add dokku dokku@your-server:versions
 git push dokku main
 ```
 
-Dokku detects the `Dockerfile`, runs the multi-stage build (Node.js fetches version data, then nginx serves the static output), and starts the container.
+Dokku detects the `Dockerfile`, builds the image (fetching version data during `npm run build`), and starts the container serving static files on port 3000.
 
-## Set up scheduled rebuilds
+## Scheduled rebuilds
 
-Version data is frozen at build time. A cron job on the server keeps it fresh.
+Version data is frozen at build time. The `app.json` file defines a [scheduled cron task](https://dokku.com/docs/processes/scheduled-cron-tasks/) that runs `npm run build` inside the container every 6 hours to refresh the data.
+
+This works automatically after deploy — no extra setup needed. You can manage it with:
 
 ```bash
-# On your Dokku server, add to root's crontab:
-sudo crontab -e
+dokku cron:list versions        # list scheduled tasks
+dokku cron:report versions      # show cron configuration
 ```
-
-Add this line to rebuild every 6 hours:
-
-```
-0 */6 * * * dokku ps:rebuild versions > /dev/null 2>&1
-```
-
-Each rebuild fetches the latest version data from all APIs and produces a new static site.
 
 ## Useful commands
 
@@ -68,6 +63,7 @@ dokku logs versions
 dokku ps:rebuild versions
 
 # Update the GitHub token
+dokku config:set versions GITHUB_TOKEN=ghp_new_token
 dokku docker-options:remove versions build "--build-arg GITHUB_TOKEN=ghp_old_token"
 dokku docker-options:add versions build "--build-arg GITHUB_TOKEN=ghp_new_token"
 dokku ps:rebuild versions
