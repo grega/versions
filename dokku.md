@@ -16,16 +16,22 @@ dokku config:set versions GITHUB_TOKEN=ghp_your_token_here
 dokku docker-options:add versions build "--build-arg GITHUB_TOKEN=ghp_your_token_here"
 ```
 
+## Set up Plausible analytics (optional)
+
+If you use [Plausible](https://plausible.io/) for analytics, set the domain to enable the tracking script:
+
+```bash
+dokku config:set versions PLAUSIBLE_DOMAIN=versions.yourdomain.com
+dokku docker-options:add versions build "--build-arg PLAUSIBLE_DOMAIN=versions.yourdomain.com"
+dokku ps:rebuild versions
+```
+
+If omitted, no analytics script is loaded.
+
 ## Configure the domain (optional)
 
 ```bash
 dokku domains:set versions versions.yourdomain.com
-```
-
-If you use the [letsencrypt plugin](https://github.com/dokku/dokku-letsencrypt):
-
-```bash
-dokku letsencrypt:enable versions
 ```
 
 ## Deploy
@@ -37,7 +43,25 @@ git remote add dokku dokku@your-server:versions
 git push dokku main
 ```
 
-Dokku detects the `Dockerfile`, builds the image (fetching version data during `npm run build`), and starts the container serving static files on port 3000.
+Dokku detects the `Dockerfile`, builds the image (fetching version data during `npm run build`), and starts the container serving static files on port 5000.
+
+## Set up port mapping
+
+Dokku needs to know which port the container listens on so nginx can proxy to it:
+
+```bash
+dokku ports:add versions http:80:5000
+```
+
+## Enable HTTPS (optional)
+
+The app must be deployed and running before enabling Let's Encrypt — the ACME challenge needs to reach your app via HTTP to verify domain ownership.
+
+If you use the [letsencrypt plugin](https://github.com/dokku/dokku-letsencrypt):
+
+```bash
+dokku letsencrypt:enable versions
+```
 
 ## Scheduled rebuilds
 
