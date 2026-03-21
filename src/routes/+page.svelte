@@ -102,7 +102,10 @@
 					class="search"
 				/>
 				{#if search}
-					<button class="search-clear" onclick={() => { search = ''; searchInput.focus(); }} title="Clear (Esc)">✕</button>
+					<span class="search-actions">
+						<span class="search-kbd">Esc</span>
+						<button class="search-clear" onclick={() => { search = ''; searchInput.focus(); }} title="Clear (Esc)">✕</button>
+					</span>
 				{:else}
 					<span class="search-kbd">F</span>
 				{/if}
@@ -123,7 +126,7 @@
 
 	<main>
 		{#if filtered().length === 0}
-			<p class="empty">No packages match your search.</p>
+			<p class="empty">Nothing matches your search</p>
 		{/if}
 
 		<div class="grid">
@@ -286,11 +289,17 @@
 		box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.3);
 	}
 
-	.search-clear {
+	.search-actions {
 		position: absolute;
 		right: 0.5rem;
 		top: 50%;
 		transform: translateY(-50%);
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+	}
+
+	.search-clear {
 		background: none;
 		border: none;
 		color: #999;
@@ -307,10 +316,6 @@
 	}
 
 	.search-kbd {
-		position: absolute;
-		right: 0.5rem;
-		top: 50%;
-		transform: translateY(-50%);
 		font-size: 0.75rem;
 		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 		font-weight: 500;
@@ -322,6 +327,13 @@
 		line-height: 1.4;
 		pointer-events: none;
 		box-shadow: 0 1px 0 #ccc;
+	}
+
+	.search-wrapper > .search-kbd {
+		position: absolute;
+		right: 0.5rem;
+		top: 50%;
+		transform: translateY(-50%);
 	}
 
 	.categories {
