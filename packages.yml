@@ -219,6 +219,12 @@ packages:
     category: Tools
     url: https://git-scm.com/
 
+  - name: GitHub CLI
+    source: github
+    repo: cli/cli
+    category: Tools
+    url: https://github.com/cli/cli/releases
+
   - name: Homebrew
     source: github
     repo: Homebrew/brew
@@ -236,3 +242,9 @@ packages:
     package: typescript
     category: Tools
     url: https://github.com/microsoft/TypeScript/releases
+
+  - name: Yarn
+    source: npm
+    package: yarn
+    category: Tools
+    url: https://github.com/yarnpkg/berry/releases
