@@ -286,7 +286,8 @@
 	.search:focus {
 		outline: none;
 		border-color: #4a90d9;
-		box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.3);
+		box-shadow: 0 0 0 4px rgba(74, 144, 217, 0.35);
+		background: #f8fbff;
 	}
 
 	.search-actions {
