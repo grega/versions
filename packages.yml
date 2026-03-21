@@ -17,6 +17,12 @@ packages:
     category: Languages
     url: https://nodejs.org/en/about/previous-releases
 
+  - name: PHP
+    source: endoflife
+    product: php
+    category: Languages
+    url: https://www.php.net/downloads
+
   - name: Python
     source: endoflife
     product: python
@@ -29,7 +35,25 @@ packages:
     category: Languages
     url: https://www.ruby-lang.org/en/downloads/releases/
 
+  - name: Rust
+    source: endoflife
+    product: rust
+    category: Languages
+    url: https://github.com/rust-lang/rust/releases
+
   # Frameworks & Libraries
+  - name: Django
+    source: pypi
+    package: Django
+    category: Frameworks
+    url: https://github.com/django/django/releases
+
+  - name: Electron
+    source: npm
+    package: electron
+    category: Frameworks
+    url: https://github.com/electron/electron/releases
+
   - name: Rails
     source: rubygems
     gem: rails
@@ -53,6 +77,18 @@ packages:
     package: vite
     category: Frameworks
     url: https://github.com/vitejs/vite/releases
+
+  - name: Vue
+    source: npm
+    package: vue
+    category: Frameworks
+    url: https://github.com/vuejs/core/releases
+
+  - name: WordPress
+    source: endoflife
+    product: wordpress
+    category: Frameworks
+    url: https://wordpress.org/download/releases/
 
   # Ruby Ecosystem
   - name: Bundler
@@ -80,6 +116,24 @@ packages:
     url: https://rubygems.org/gems/sidekiq
 
   # Databases
+  - name: InfluxDB
+    source: github
+    repo: influxdata/influxdb
+    category: Databases
+    url: https://github.com/influxdata/influxdb/releases
+
+  - name: MariaDB
+    source: endoflife
+    product: mariadb
+    category: Databases
+    url: https://mariadb.org/download/
+
+  - name: MySQL
+    source: endoflife
+    product: mysql
+    category: Databases
+    url: https://dev.mysql.com/downloads/mysql/
+
   - name: PostgreSQL
     source: github
     repo: postgres/postgres
@@ -140,11 +194,23 @@ packages:
     url: https://github.com/hashicorp/terraform/releases
 
   # Tools
+  - name: Composer
+    source: github
+    repo: composer/composer
+    category: Tools
+    url: https://github.com/composer/composer/releases
+
   - name: asdf
     source: github
     repo: asdf-vm/asdf
     category: Tools
     url: https://github.com/asdf-vm/asdf/releases
+
+  - name: dbt Core
+    source: pypi
+    package: dbt-core
+    category: Tools
+    url: https://github.com/dbt-labs/dbt-core/releases
 
   - name: Git
     source: github
