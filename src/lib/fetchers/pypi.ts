@@ -7,14 +7,16 @@ export async function fetchPyPI(config: PackageConfig): Promise<PackageInfo> {
 	if (!res.ok) throw new Error(`PyPI API returned ${res.status}`);
 	const data = await res.json();
 
+	const latestVersion = data.info?.version ?? '';
 	const releasesObj = data.releases ?? {};
 	const versions = Object.keys(releasesObj)
 		.filter((v) => releasesObj[v].length > 0)
 		.sort((a, b) => {
-			// Sort by upload date of first file in release
 			const dateA = releasesObj[a][0]?.upload_time ?? '';
 			const dateB = releasesObj[b][0]?.upload_time ?? '';
-			return dateB.localeCompare(dateA);
+			if (dateA !== dateB) return dateB.localeCompare(dateA);
+			// Same date: prefer higher version number
+			return b.localeCompare(a, undefined, { numeric: true });
 		})
 		.slice(0, 15);
 
@@ -31,14 +33,17 @@ export async function fetchPyPI(config: PackageConfig): Promise<PackageInfo> {
 		};
 	});
 
-	const stableReleases = releases.filter((r) => !r.prerelease);
+	// Use PyPI's declared latest version rather than relying on sort order
+	const latestStable = releases.find((r) => r.version === latestVersion)
+		?? releases.find((r) => !r.prerelease)
+		?? null;
 
 	return {
 		name: config.name,
 		category: config.category,
 		sourceUrl: config.url,
 		latest: releases[0] ?? null,
-		latestStable: stableReleases[0] ?? null,
+		latestStable,
 		releases,
 		fetchedAt: new Date().toISOString()
 	};
