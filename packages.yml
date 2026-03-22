@@ -20,7 +20,7 @@ packages:
     source: nodejs
     categories:
       - Languages
-      - Node
+      - Node.js
     url: https://nodejs.org/en/about/previous-releases
 
   - name: PHP
@@ -67,7 +67,7 @@ packages:
     package: express
     categories:
       - Frameworks
-      - Node
+      - Node.js
     url: https://github.com/expressjs/express/releases
 
   - name: FastAPI
@@ -99,7 +99,7 @@ packages:
     package: electron
     categories:
       - Frameworks
-      - Node
+      - Node.js
     url: https://github.com/electron/electron/releases
 
   - name: Next.js
@@ -107,7 +107,6 @@ packages:
     package: next
     categories:
       - Frameworks
-      - Node
     url: https://github.com/vercel/next.js/releases
 
   - name: Nuxt
@@ -115,7 +114,6 @@ packages:
     package: nuxt
     categories:
       - Frameworks
-      - Node
     url: https://github.com/nuxt/nuxt/releases
 
   - name: Rails
@@ -131,7 +129,6 @@ packages:
     package: react
     categories:
       - Frameworks
-      - Node
     url: https://github.com/facebook/react/releases
 
   - name: Svelte
@@ -151,7 +148,6 @@ packages:
     package: tailwindcss
     categories:
       - Frameworks
-      - Node
     url: https://github.com/tailwindlabs/tailwindcss/releases
 
   - name: Vite
@@ -220,6 +216,52 @@ packages:
     gem: sidekiq
     categories: Ruby
     url: https://rubygems.org/gems/sidekiq
+
+  # Python Ecosystem
+  - name: Celery
+    source: pypi
+    package: celery
+    categories: Python
+    url: https://github.com/celery/celery/releases
+
+  - name: Gunicorn
+    source: pypi
+    package: gunicorn
+    categories: Python
+    url: https://github.com/benoitc/gunicorn/releases
+
+  - name: NumPy
+    source: pypi
+    package: numpy
+    categories: Python
+    url: https://github.com/numpy/numpy/releases
+
+  - name: Pandas
+    source: pypi
+    package: pandas
+    categories: Python
+    url: https://github.com/pandas-dev/pandas/releases
+
+  # Go Ecosystem
+  - name: cobra
+    source: github
+    repo: spf13/cobra
+    categories: Go
+    url: https://github.com/spf13/cobra/releases
+
+  - name: golangci-lint
+    source: github
+    repo: golangci/golangci-lint
+    categories:
+      - Go
+      - Tools
+    url: https://github.com/golangci/golangci-lint/releases
+
+  - name: GORM
+    source: github
+    repo: go-gorm/gorm
+    categories: Go
+    url: https://github.com/go-gorm/gorm/releases
 
   # Databases
   - name: InfluxDB
@@ -314,6 +356,13 @@ packages:
     categories: Tools
     url: https://github.com/asdf-vm/asdf/releases
 
+  - name: esbuild
+    source: npm
+    package: esbuild
+    categories:
+      - Tools
+    url: https://github.com/evanw/esbuild/releases
+
   - name: dbt Core
     source: pypi
     package: dbt-core
@@ -344,8 +393,22 @@ packages:
     package: npm
     categories:
       - Tools
-      - Node
+      - Node.js
     url: https://github.com/npm/cli/releases
+
+  - name: pnpm
+    source: npm
+    package: pnpm
+    categories:
+      - Tools
+      - Node.js
+    url: https://github.com/pnpm/pnpm/releases
+
+  - name: Prettier
+    source: npm
+    package: prettier
+    categories: Tools
+    url: https://github.com/prettier/prettier/releases
 
   - name: TypeScript
     source: npm
@@ -358,5 +421,5 @@ packages:
     package: yarn
     categories:
       - Tools
-      - Node
+      - Node.js
     url: https://github.com/yarnpkg/berry/releases
