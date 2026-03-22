@@ -6,7 +6,7 @@ import type { PackageConfig } from '$lib/types.js';
 const config: PackageConfig = {
 	name: 'Node.js',
 	source: 'nodejs',
-	category: 'Languages',
+	categories: ['Languages'],
 	url: 'https://nodejs.org/en/about/previous-releases'
 };
 

@@ -3,135 +3,241 @@ packages:
   - name: Elixir
     source: endoflife
     product: elixir
-    category: Languages
+    categories:
+      - Languages
+      - Elixir
     url: https://github.com/elixir-lang/elixir/releases
 
   - name: Go
     source: endoflife
     product: go
-    category: Languages
+    categories:
+      - Languages
+      - Go
     url: https://go.dev/dl/
 
   - name: Node.js
     source: nodejs
-    category: Languages
+    categories:
+      - Languages
+      - Node
     url: https://nodejs.org/en/about/previous-releases
 
   - name: PHP
     source: endoflife
     product: php
-    category: Languages
+    categories:
+      - Languages
+      - PHP
     url: https://www.php.net/downloads
 
   - name: Python
     source: endoflife
     product: python
-    category: Languages
+    categories:
+     - Languages
+     - Python
     url: https://www.python.org/downloads/
 
   - name: Ruby
     source: github
     repo: ruby/ruby
-    category: Languages
+    categories: 
+      - Languages
+      - Ruby
     url: https://www.ruby-lang.org/en/downloads/releases/
 
   - name: Rust
     source: endoflife
     product: rust
-    category: Languages
+    categories: Languages
     url: https://github.com/rust-lang/rust/releases
 
   # Frameworks & Libraries
   - name: Django
     source: pypi
     package: Django
-    category: Frameworks
+    categories:
+      - Frameworks
+      - Python
     url: https://github.com/django/django/releases
+
+  - name: Express
+    source: npm
+    package: express
+    categories:
+      - Frameworks
+      - Node
+    url: https://github.com/expressjs/express/releases
+
+  - name: FastAPI
+    source: pypi
+    package: fastapi
+    categories:
+      - Frameworks
+      - Python
+    url: https://github.com/fastapi/fastapi/releases
+
+  - name: Flask
+    source: pypi
+    package: Flask
+    categories:
+      - Frameworks
+      - Python
+    url: https://github.com/pallets/flask/releases
+
+  - name: Gin
+    source: github
+    repo: gin-gonic/gin
+    categories:
+      - Frameworks
+      - Go
+    url: https://github.com/gin-gonic/gin/releases
 
   - name: Electron
     source: npm
     package: electron
-    category: Frameworks
+    categories:
+      - Frameworks
+      - Node
     url: https://github.com/electron/electron/releases
+
+  - name: Next.js
+    source: npm
+    package: next
+    categories:
+      - Frameworks
+      - Node
+    url: https://github.com/vercel/next.js/releases
+
+  - name: Nuxt
+    source: npm
+    package: nuxt
+    categories:
+      - Frameworks
+      - Node
+    url: https://github.com/nuxt/nuxt/releases
 
   - name: Rails
     source: rubygems
     gem: rails
-    category: Frameworks
+    categories:
+      - Frameworks
+      - Ruby
     url: https://rubygems.org/gems/rails
+
+  - name: React
+    source: npm
+    package: react
+    categories:
+      - Frameworks
+      - Node
+    url: https://github.com/facebook/react/releases
 
   - name: Svelte
     source: npm
     package: svelte
-    category: Frameworks
+    categories: Frameworks
     url: https://github.com/sveltejs/svelte/releases
 
   - name: SvelteKit
     source: npm
     package: "@sveltejs/kit"
-    category: Frameworks
+    categories: Frameworks
     url: https://github.com/sveltejs/kit/releases
+
+  - name: Tailwind CSS
+    source: npm
+    package: tailwindcss
+    categories:
+      - Frameworks
+      - Node
+    url: https://github.com/tailwindlabs/tailwindcss/releases
 
   - name: Vite
     source: npm
     package: vite
-    category: Frameworks
+    categories: Frameworks
     url: https://github.com/vitejs/vite/releases
 
   - name: Vue
     source: npm
     package: vue
-    category: Frameworks
+    categories: Frameworks
     url: https://github.com/vuejs/core/releases
 
   - name: WordPress
     source: endoflife
     product: wordpress
-    category: Frameworks
+    categories:
+      - Frameworks
+      - PHP
     url: https://wordpress.org/download/releases/
 
   # Ruby Ecosystem
   - name: Bundler
     source: rubygems
     gem: bundler
-    category: Ruby
+    categories: Ruby
     url: https://rubygems.org/gems/bundler
 
   - name: Puma
     source: rubygems
     gem: puma
-    category: Ruby
+    categories: Ruby
     url: https://rubygems.org/gems/puma
 
   - name: RubyGems
     source: github
     repo: rubygems/rubygems
-    category: Ruby
+    categories: Ruby
     url: https://github.com/rubygems/rubygems/releases
+
+  - name: Rack
+    source: rubygems
+    gem: rack
+    categories: Ruby
+    url: https://rubygems.org/gems/rack
+
+  - name: RSpec
+    source: rubygems
+    gem: rspec
+    categories:
+      - Ruby
+      - Tools
+    url: https://rubygems.org/gems/rspec
+
+  - name: RuboCop
+    source: rubygems
+    gem: rubocop
+    categories:
+      - Ruby
+      - Tools
+    url: https://rubygems.org/gems/rubocop
 
   - name: Sidekiq
     source: rubygems
     gem: sidekiq
-    category: Ruby
+    categories: Ruby
     url: https://rubygems.org/gems/sidekiq
 
   # Databases
   - name: InfluxDB
     source: github
     repo: influxdata/influxdb
-    category: Databases
+    categories: Databases
     url: https://github.com/influxdata/influxdb/releases
 
   - name: MariaDB
     source: endoflife
     product: mariadb
-    category: Databases
+    categories: Databases
     url: https://mariadb.org/download/
 
   - name: MySQL
     source: endoflife
     product: mysql
-    category: Databases
+    categories: Databases
     url: https://dev.mysql.com/downloads/mysql/
 
   - name: PostgreSQL
@@ -141,13 +247,13 @@ packages:
     tagReplace:
       "REL_": ""
       "_": "."
-    category: Databases
+    categories: Databases
     url: https://www.postgresql.org/docs/release/
 
   - name: Redis
     source: endoflife
     product: redis
-    category: Databases
+    categories: Databases
     url: https://redis.io/downloads/
 
   - name: SQLite
@@ -156,14 +262,14 @@ packages:
     tagPattern: "^version-"
     tagReplace:
       "version-": ""
-    category: Databases
+    categories: Databases
     url: https://www.sqlite.org/changes.html
 
   # DevOps & Infra
   - name: Ansible
     source: github
     repo: ansible/ansible
-    category: DevOps
+    categories: DevOps
     url: https://github.com/ansible/ansible/releases
 
   - name: Docker
@@ -172,79 +278,85 @@ packages:
     tagPattern: "^docker-v"
     tagReplace:
       "docker-v": ""
-    category: DevOps
+    categories: DevOps
     url: https://github.com/moby/moby/releases
 
   - name: Dokku
     source: github
     repo: dokku/dokku
-    category: DevOps
+    categories: DevOps
     url: https://github.com/dokku/dokku/releases
 
   - name: Nginx
     source: endoflife
     product: nginx
-    category: DevOps
+    categories: DevOps
     url: https://nginx.org/en/CHANGES
 
   - name: Terraform
     source: github
     repo: hashicorp/terraform
-    category: DevOps
+    categories: DevOps
     url: https://github.com/hashicorp/terraform/releases
 
   # Tools
   - name: Composer
     source: github
     repo: composer/composer
-    category: Tools
+    categories:
+      - Tools
+      - PHP
     url: https://github.com/composer/composer/releases
 
   - name: asdf
     source: github
     repo: asdf-vm/asdf
-    category: Tools
+    categories: Tools
     url: https://github.com/asdf-vm/asdf/releases
 
   - name: dbt Core
     source: pypi
     package: dbt-core
-    category: Tools
+    categories: Tools
     url: https://github.com/dbt-labs/dbt-core/releases
 
   - name: Git
     source: github
     repo: git/git
     tagPattern: "^v\\d+\\.\\d+\\.\\d+$"
-    category: Tools
+    categories: Tools
     url: https://git-scm.com/
 
   - name: GitHub CLI
     source: github
     repo: cli/cli
-    category: Tools
+    categories: Tools
     url: https://github.com/cli/cli/releases
 
   - name: Homebrew
     source: github
     repo: Homebrew/brew
-    category: Tools
+    categories: Tools
     url: https://github.com/Homebrew/brew/releases
 
   - name: npm
     source: npm
     package: npm
-    category: Tools
+    categories:
+      - Tools
+      - Node
     url: https://github.com/npm/cli/releases
 
   - name: TypeScript
     source: npm
     package: typescript
-    category: Tools
+    categories: Tools
     url: https://github.com/microsoft/TypeScript/releases
 
   - name: Yarn
     source: npm
     package: yarn
-    category: Tools
+    categories:
+      - Tools
+      - Node
     url: https://github.com/yarnpkg/berry/releases

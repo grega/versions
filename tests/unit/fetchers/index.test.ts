@@ -16,7 +16,7 @@ describe('fetchPackage', () => {
 		const config: PackageConfig = {
 			name: 'Unknown',
 			source: 'nonexistent',
-			category: 'Tools',
+			categories: ['Tools'],
 			url: 'https://example.com'
 		};
 
@@ -35,7 +35,7 @@ describe('fetchPackage', () => {
 			name: 'Broken',
 			source: 'rubygems',
 			gem: 'nonexistent',
-			category: 'Tools',
+			categories: ['Tools'],
 			url: 'https://rubygems.org/gems/nonexistent'
 		};
 

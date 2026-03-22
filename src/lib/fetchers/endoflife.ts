@@ -26,7 +26,7 @@ export async function fetchEndOfLife(config: PackageConfig): Promise<PackageInfo
 
 	return {
 		name: config.name,
-		category: config.category,
+		categories: config.categories,
 		sourceUrl: config.url,
 		latest: releases[0] ?? null,
 		latestStable: releases[0] ?? null,

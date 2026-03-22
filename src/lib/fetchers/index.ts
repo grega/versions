@@ -20,7 +20,7 @@ export async function fetchPackage(config: PackageConfig): Promise<PackageInfo> 
 	if (!fetcher) {
 		return {
 			name: config.name,
-			category: config.category,
+			categories: config.categories,
 			sourceUrl: config.url,
 			latest: null,
 			latestStable: null,
@@ -35,7 +35,7 @@ export async function fetchPackage(config: PackageConfig): Promise<PackageInfo> 
 	} catch (err) {
 		return {
 			name: config.name,
-			category: config.category,
+			categories: config.categories,
 			sourceUrl: config.url,
 			latest: null,
 			latestStable: null,

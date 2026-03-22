@@ -24,7 +24,7 @@ export async function fetchNodejs(config: PackageConfig): Promise<PackageInfo> {
 
 	return {
 		name: config.name,
-		category: config.category,
+		categories: config.categories,
 		sourceUrl: config.url,
 		latest: releases[0] ?? null,
 		latestStable: ltsReleases[0] ?? releases[0] ?? null,

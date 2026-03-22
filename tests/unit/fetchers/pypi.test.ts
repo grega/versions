@@ -7,7 +7,7 @@ const config: PackageConfig = {
 	name: 'Django',
 	source: 'pypi',
 	package: 'django',
-	category: 'Frameworks',
+	categories: ['Frameworks'],
 	url: 'https://pypi.org/project/Django/'
 };
 

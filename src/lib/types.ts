@@ -8,7 +8,7 @@ export interface Release {
 
 export interface PackageInfo {
 	name: string;
-	category: string;
+	categories: string[];
 	sourceUrl: string;
 	latest: Release | null;
 	latestStable: Release | null;
@@ -20,7 +20,7 @@ export interface PackageInfo {
 export interface PackageConfig {
 	name: string;
 	source: string;
-	category: string;
+	categories: string[];
 	url: string;
 	repo?: string;
 	gem?: string;

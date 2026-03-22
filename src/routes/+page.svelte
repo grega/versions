@@ -7,7 +7,7 @@
 	let expanded = $state<Record<string, boolean>>({});
 
 	const categories = $derived(() => {
-		const cats = new Set(data.packages.map((p: PackageInfo) => p.category));
+		const cats = new Set(data.packages.flatMap((p: PackageInfo) => p.categories));
 		return ['All', ...Array.from(cats).sort()];
 	});
 
@@ -15,7 +15,7 @@
 		const q = search.toLowerCase();
 		return data.packages.filter((p: PackageInfo) => {
 			const matchesSearch = !q || p.name.toLowerCase().includes(q);
-			const matchesCategory = activeCategory === 'All' || p.category === activeCategory;
+			const matchesCategory = activeCategory === 'All' || p.categories.includes(activeCategory);
 			return matchesSearch && matchesCategory;
 		});
 	});
@@ -134,7 +134,11 @@
 				<div class="card" class:error={!!pkg.error}>
 					<div class="card-header">
 						<h2>{pkg.name}</h2>
-						<span class="badge">{pkg.category}</span>
+						<div class="badges">
+							{#each pkg.categories as cat}
+								<span class="badge">{cat}</span>
+							{/each}
+						</div>
 					</div>
 
 					{#if pkg.error}
@@ -397,6 +401,12 @@
 		margin: 0;
 		font-size: 1.1rem;
 		font-weight: 600;
+	}
+
+	.badges {
+		display: flex;
+		gap: 0.3rem;
+		flex-wrap: wrap;
 	}
 
 	.badge {

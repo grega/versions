@@ -85,7 +85,7 @@ export async function fetchGitHub(config: PackageConfig): Promise<PackageInfo> {
 
 	return {
 		name: config.name,
-		category: config.category,
+		categories: config.categories,
 		sourceUrl: config.url,
 		latest: releases[0] ?? null,
 		latestStable: stableReleases[0] ?? null,

@@ -7,7 +7,7 @@ const config: PackageConfig = {
 	name: 'TypeScript',
 	source: 'npm',
 	package: 'typescript',
-	category: 'Tools',
+	categories: ['Tools'],
 	url: 'https://github.com/microsoft/TypeScript/releases'
 };
 

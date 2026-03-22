@@ -6,7 +6,7 @@ describe('loadPackages', () => {
 		const packages = loadPackages();
 
 		expect(packages.length).toBeGreaterThan(0);
-		expect(packages.every((p) => p.name && p.source && p.category && p.url)).toBe(true);
+		expect(packages.every((p) => p.name && p.source && p.categories.length > 0 && p.url)).toBe(true);
 	});
 
 	it('has unique package names', () => {

@@ -7,7 +7,7 @@ const config: PackageConfig = {
 	name: 'Python',
 	source: 'endoflife',
 	product: 'python',
-	category: 'Languages',
+	categories: ['Languages'],
 	url: 'https://www.python.org/downloads/'
 };
 

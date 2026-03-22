@@ -7,7 +7,7 @@ const config: PackageConfig = {
 	name: 'Rails',
 	source: 'rubygems',
 	gem: 'rails',
-	category: 'Frameworks',
+	categories: ['Frameworks'],
 	url: 'https://rubygems.org/gems/rails'
 };
 

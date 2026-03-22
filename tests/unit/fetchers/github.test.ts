@@ -13,7 +13,7 @@ const baseConfig: PackageConfig = {
 	name: 'TestPkg',
 	source: 'github',
 	repo: 'example/repo',
-	category: 'Tools',
+	categories: ['Tools'],
 	url: 'https://github.com/example/repo/releases'
 };
 
@@ -30,7 +30,7 @@ describe('fetchGitHub', () => {
 		const result = await fetchGitHub(baseConfig);
 
 		expect(result.name).toBe('TestPkg');
-		expect(result.category).toBe('Tools');
+		expect(result.categories).toEqual(['Tools']);
 		expect(result.error).toBeUndefined();
 		expect(result.releases).toHaveLength(4);
 

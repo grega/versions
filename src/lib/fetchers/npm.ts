@@ -32,7 +32,7 @@ export async function fetchNpm(config: PackageConfig): Promise<PackageInfo> {
 
 	return {
 		name: config.name,
-		category: config.category,
+		categories: config.categories,
 		sourceUrl: config.url,
 		latest: latestRelease,
 		latestStable: stableReleases[0] ?? null,
