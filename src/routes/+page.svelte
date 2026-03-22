@@ -1,28 +1,30 @@
 <script lang="ts">
 	import type { PackageInfo } from '$lib/types.js';
 	import { parseFilterParams, buildFilterParams } from '$lib/url.js';
-	import { page } from '$app/state';
-	import { goto, afterNavigate } from '$app/navigation';
+	import { browser } from '$app/environment';
+	import { goto, afterNavigate, onNavigate } from '$app/navigation';
 
 	let { data } = $props();
-	const initialFilter = parseFilterParams(page.url.searchParams);
-	let search = $state(initialFilter.search);
-	let activeCategory = $state(initialFilter.category);
+	let search = $state('');
+	let activeCategory = $state('All');
 	let expanded = $state<Record<string, boolean>>({});
 
-	function syncFromUrl() {
-		const state = parseFilterParams(page.url.searchParams);
-		search = state.search;
-		activeCategory = state.category;
+	if (browser) {
+		const initialFilter = parseFilterParams(new URLSearchParams(window.location.search));
+		search = initialFilter.search;
+		activeCategory = initialFilter.category;
 	}
 
 	afterNavigate(({ from, to }) => {
 		if (from?.url?.toString() !== to?.url?.toString()) {
-			syncFromUrl();
+			const state = parseFilterParams(to?.url?.searchParams ?? new URLSearchParams());
+			search = state.search;
+			activeCategory = state.category;
 		}
 	});
 
 	function updateUrl() {
+		if (!browser) return;
 		goto(buildFilterParams({ search, category: activeCategory }), { replaceState: true, keepFocus: true, noScroll: true });
 	}
 
