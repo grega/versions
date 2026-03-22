@@ -1,10 +1,36 @@
 <script lang="ts">
 	import type { PackageInfo } from '$lib/types.js';
+	import { parseFilterParams, buildFilterParams } from '$lib/url.js';
+	import { page } from '$app/state';
+	import { goto, afterNavigate } from '$app/navigation';
 
 	let { data } = $props();
-	let search = $state('');
-	let activeCategory = $state('All');
+	const initialFilter = parseFilterParams(page.url.searchParams);
+	let search = $state(initialFilter.search);
+	let activeCategory = $state(initialFilter.category);
 	let expanded = $state<Record<string, boolean>>({});
+
+	function syncFromUrl() {
+		const state = parseFilterParams(page.url.searchParams);
+		search = state.search;
+		activeCategory = state.category;
+	}
+
+	afterNavigate(({ from, to }) => {
+		if (from?.url?.toString() !== to?.url?.toString()) {
+			syncFromUrl();
+		}
+	});
+
+	function updateUrl() {
+		goto(buildFilterParams({ search, category: activeCategory }), { replaceState: true, keepFocus: true, noScroll: true });
+	}
+
+	$effect(() => {
+		search;
+		activeCategory;
+		updateUrl();
+	});
 
 	const categories = $derived(() => {
 		const cats = new Set(data.packages.flatMap((p: PackageInfo) => p.categories));
@@ -86,7 +112,7 @@
 <div class="container">
 	<header>
 		<div class="header-top">
-			<h1>Versions</h1>
+			<h1><a href="/">Versions</a></h1>
 			<p class="tagline">Release information for a selection of languages, frameworks, and tools</p>
 			<span class="built-at">
 				Updated {timeSince(data.builtAt)} &middot; {new Date(data.builtAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -251,6 +277,11 @@
 		margin: 0;
 		font-size: 1.75rem;
 		font-weight: 700;
+	}
+
+	h1 a {
+		color: inherit;
+		text-decoration: none;
 	}
 
 	.tagline {
