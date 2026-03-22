@@ -56,7 +56,7 @@ dokku ports:add versions http:80:5000
 
 ## Enable HTTPS (optional)
 
-The app must be deployed and running before enabling Let's Encrypt — the ACME challenge needs to reach your app via HTTP to verify domain ownership.
+The app must be deployed and running before enabling Let's Encrypt - the ACME challenge needs to reach your app via HTTP to verify domain ownership.
 
 If you use the [letsencrypt plugin](https://github.com/dokku/dokku-letsencrypt):
 
@@ -68,7 +68,7 @@ dokku letsencrypt:enable versions
 
 Version data is frozen at build time. The `app.json` file defines a [scheduled cron task](https://dokku.com/docs/processes/scheduled-cron-tasks/) that runs `npm run build` inside the container every 6 hours to refresh the data.
 
-This works automatically after deploy — no extra setup needed. You can manage it with:
+This works automatically after deploy - no extra setup needed. You can manage it with:
 
 ```bash
 dokku cron:list versions        # list scheduled tasks
