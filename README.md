@@ -52,9 +52,49 @@ Example:
   - name: Django
     source: pypi
     package: django
-    category: Frameworks
+    categories: Frameworks
     url: https://pypi.org/project/Django/
 ```
+
+### GitHub tag filtering
+
+Some GitHub repos don't use clean version tags. Monorepos publish multiple packages under different tag prefixes (e.g. `astro@6.0.8` alongside `@astrojs/node@10.0.3`), and some repos use non-standard naming (e.g. `REL_16_2`, `docker-v29.3.0`).
+
+Use `tagPattern` and `tagReplace` to handle these:
+
+- **`tagPattern`** — a regex to filter tags. Only tags matching the pattern are included.
+- **`tagReplace`** — a map of string replacements applied to the tag to produce a clean version number. Applied before the automatic `v` prefix stripping.
+
+Examples:
+
+```yaml
+# Monorepo — only match the main package, strip the prefix
+- name: Astro
+  source: github
+  repo: withastro/astro
+  tagPattern: "^astro@\\d"
+  tagReplace:
+    "astro@": ""
+
+# Non-standard prefix
+- name: Docker
+  source: github
+  repo: moby/moby
+  tagPattern: "^docker-v"
+  tagReplace:
+    "docker-v": ""
+
+# Underscore-separated versions (REL_16_2 → 16.2)
+- name: PostgreSQL
+  source: github
+  repo: postgres/postgres
+  tagPattern: "^REL_\\d+_\\d+$"
+  tagReplace:
+    "REL_": ""
+    "_": "."
+```
+
+When `tagPattern` is set, the releases API is tried first (it includes dates and prerelease info). If no releases match, the tags API is used as a fallback.
 
 Rebuild to pick up changes.
 

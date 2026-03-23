@@ -19,29 +19,44 @@ function cleanVersion(tag: string, tagReplace?: Record<string, string>): string 
 	return version.replace(/^v/, '').replaceAll('_', '.');
 }
 
+const TARGET_COUNT = 15;
+const MAX_PAGES = 3;
+
 async function fetchReleases(
 	repo: string,
 	tagPattern?: string,
 	tagReplace?: Record<string, string>
 ): Promise<Release[]> {
-	const url = `https://api.github.com/repos/${repo}/releases?per_page=30`;
-	const res = await fetch(url, { headers: headers() });
-	if (!res.ok) throw new Error(`GitHub releases API returned ${res.status}`);
-	const data = await res.json();
+	const regex = tagPattern ? new RegExp(tagPattern) : null;
+	const collected: Release[] = [];
 
-	let filtered = data;
-	if (tagPattern) {
-		const regex = new RegExp(tagPattern);
-		filtered = data.filter((r: Record<string, unknown>) => regex.test(String(r.tag_name)));
+	for (let page = 1; page <= MAX_PAGES; page++) {
+		const url = `https://api.github.com/repos/${repo}/releases?per_page=30&page=${page}`;
+		const res = await fetch(url, { headers: headers() });
+		if (!res.ok) throw new Error(`GitHub releases API returned ${res.status}`);
+		const data = await res.json();
+
+		if (data.length === 0) break;
+
+		const filtered = regex
+			? data.filter((r: Record<string, unknown>) => regex.test(String(r.tag_name)))
+			: data;
+
+		for (const r of filtered) {
+			collected.push({
+				version: cleanVersion(String(r.tag_name), tagReplace),
+				date: String(r.published_at).split('T')[0],
+				prerelease: Boolean(r.prerelease),
+				lts: false,
+				url: String(r.html_url)
+			});
+			if (collected.length >= TARGET_COUNT) return collected;
+		}
+
+		if (!regex || data.length < 30) break; // no filtering or last page
 	}
 
-	return filtered.slice(0, 15).map((r: Record<string, unknown>) => ({
-		version: cleanVersion(String(r.tag_name), tagReplace),
-		date: String(r.published_at).split('T')[0],
-		prerelease: Boolean(r.prerelease),
-		lts: false,
-		url: String(r.html_url)
-	}));
+	return collected;
 }
 
 async function fetchTags(

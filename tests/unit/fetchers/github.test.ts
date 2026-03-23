@@ -119,6 +119,103 @@ describe('fetchGitHub', () => {
 		expect(result.releases[2].version).toBe('15.6');
 	});
 
+	it('filters monorepo releases by tagPattern (e.g. Astro)', async () => {
+		const monorepoReleases = [
+			{
+				tag_name: 'astro@6.0.8',
+				published_at: '2026-03-20T12:00:00Z',
+				prerelease: false,
+				html_url: 'https://github.com/withastro/astro/releases/tag/astro@6.0.8'
+			},
+			{
+				tag_name: '@astrojs/underscore-redirects@1.0.2',
+				published_at: '2026-03-19T12:00:00Z',
+				prerelease: false,
+				html_url:
+					'https://github.com/withastro/astro/releases/tag/@astrojs/underscore-redirects@1.0.2'
+			},
+			{
+				tag_name: '@astrojs/node@10.0.3',
+				published_at: '2026-03-18T12:00:00Z',
+				prerelease: false,
+				html_url: 'https://github.com/withastro/astro/releases/tag/@astrojs/node@10.0.3'
+			},
+			{
+				tag_name: 'astro@6.0.7',
+				published_at: '2026-03-15T12:00:00Z',
+				prerelease: false,
+				html_url: 'https://github.com/withastro/astro/releases/tag/astro@6.0.7'
+			}
+		];
+		vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+			new Response(JSON.stringify(monorepoReleases), { status: 200 })
+		);
+
+		const config: PackageConfig = {
+			...baseConfig,
+			repo: 'withastro/astro',
+			tagPattern: '^astro@\\d',
+			tagReplace: { 'astro@': '' }
+		};
+		const result = await fetchGitHub(config);
+
+		expect(result.releases).toHaveLength(2);
+		expect(result.latest?.version).toBe('6.0.8');
+		expect(result.releases[1].version).toBe('6.0.7');
+	});
+
+	it('paginates to collect enough filtered releases from monorepos', async () => {
+		const makeRelease = (tag: string, date: string) => ({
+			tag_name: tag,
+			published_at: `${date}T12:00:00Z`,
+			prerelease: false,
+			html_url: `https://github.com/withastro/astro/releases/tag/${tag}`
+		});
+
+		// Build a full page of 30 releases with only a few astro matches
+		const filler = (n: number) =>
+			Array.from({ length: n }, (_, i) => makeRelease(`@astrojs/pkg-${i}@1.0.0`, '2026-03-01'));
+
+		// Page 1: 2 astro releases padded to 30
+		const page1 = [
+			makeRelease('astro@6.0.8', '2026-03-20'),
+			...filler(14),
+			makeRelease('astro@6.0.7', '2026-03-17'),
+			...filler(14)
+		];
+		// Page 2: 3 astro releases among 20 (< 30, so last page)
+		const page2 = [
+			makeRelease('astro@6.0.6', '2026-03-15'),
+			...filler(6),
+			makeRelease('astro@6.0.5', '2026-03-13'),
+			...filler(6),
+			makeRelease('astro@6.0.4', '2026-03-11'),
+			...filler(5)
+		];
+
+		vi.spyOn(globalThis, 'fetch')
+			.mockResolvedValueOnce(new Response(JSON.stringify(page1), { status: 200 }))
+			.mockResolvedValueOnce(new Response(JSON.stringify(page2), { status: 200 }));
+
+		const config: PackageConfig = {
+			...baseConfig,
+			repo: 'withastro/astro',
+			tagPattern: '^astro@\\d',
+			tagReplace: { 'astro@': '' }
+		};
+		const result = await fetchGitHub(config);
+
+		expect(result.releases).toHaveLength(5);
+		expect(result.releases.map((r) => r.version)).toEqual([
+			'6.0.8',
+			'6.0.7',
+			'6.0.6',
+			'6.0.5',
+			'6.0.4'
+		]);
+		expect(fetch).toHaveBeenCalledTimes(2);
+	});
+
 	it('returns error on API failure', async () => {
 		vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
 			new Response('', { status: 403 })
