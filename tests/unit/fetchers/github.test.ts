@@ -102,10 +102,20 @@ describe('fetchGitHub', () => {
 	});
 
 	it('falls back to tags API when releases API returns no matches', async () => {
-		// Releases API returns empty after filtering
+		const commitDate = (date: string) =>
+			new Response(JSON.stringify({ committer: { date: `${date}T12:00:00Z` } }), {
+				status: 200
+			});
+
+		// Releases API returns empty after filtering, then tags API, then per-tag commits
 		vi.spyOn(globalThis, 'fetch')
 			.mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
-			.mockResolvedValueOnce(new Response(JSON.stringify(tagsFixture), { status: 200 }));
+			.mockResolvedValueOnce(new Response(JSON.stringify(tagsFixture), { status: 200 }))
+			.mockResolvedValueOnce(commitDate('2026-03-10'))
+			.mockResolvedValueOnce(commitDate('2026-03-05'))
+			.mockResolvedValueOnce(commitDate('2026-02-20'))
+			.mockResolvedValueOnce(commitDate('2026-02-10'))
+			.mockResolvedValueOnce(commitDate('2026-01-15'));
 
 		const config: PackageConfig = {
 			...baseConfig,
@@ -116,7 +126,9 @@ describe('fetchGitHub', () => {
 
 		expect(result.releases).toHaveLength(5);
 		expect(result.latest?.version).toBe('16.2');
+		expect(result.latest?.date).toBe('2026-03-10');
 		expect(result.releases[2].version).toBe('15.6');
+		expect(result.releases[2].date).toBe('2026-02-20');
 	});
 
 	it('filters monorepo releases by tagPattern (e.g. Astro)', async () => {

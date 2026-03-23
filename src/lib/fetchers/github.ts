@@ -71,10 +71,24 @@ async function fetchTags(
 
 	const regex = new RegExp(tagPattern);
 	const filtered = data.filter((t: Record<string, unknown>) => regex.test(String(t.name)));
+	const tags = filtered.slice(0, 15);
 
-	return filtered.slice(0, 15).map((t: Record<string, unknown>) => ({
+	const dates = await Promise.all(
+		tags.map(async (t: Record<string, unknown>) => {
+			const sha = (t.commit as Record<string, unknown>)?.sha;
+			if (!sha) return '';
+			const commitUrl = `https://api.github.com/repos/${repo}/git/commits/${sha}`;
+			const commitRes = await fetch(commitUrl, { headers: headers() });
+			if (!commitRes.ok) return '';
+			const commit = await commitRes.json();
+			const dateStr = commit.committer?.date ?? commit.author?.date ?? '';
+			return String(dateStr).split('T')[0];
+		})
+	);
+
+	return tags.map((t: Record<string, unknown>, i: number) => ({
 		version: cleanVersion(String(t.name), tagReplace),
-		date: '',
+		date: dates[i],
 		prerelease: false,
 		lts: false,
 		url: `https://github.com/${repo}/releases/tag/${t.name}`

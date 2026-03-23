@@ -1,8 +1,8 @@
 [
-  {"name": "REL_16_2"},
-  {"name": "REL_16_1"},
-  {"name": "REL_15_6"},
-  {"name": "REL_15_5"},
-  {"name": "some-other-tag"},
-  {"name": "REL_14_11"}
+  {"name": "REL_16_2", "commit": {"sha": "aaa111"}},
+  {"name": "REL_16_1", "commit": {"sha": "bbb222"}},
+  {"name": "REL_15_6", "commit": {"sha": "ccc333"}},
+  {"name": "REL_15_5", "commit": {"sha": "ddd444"}},
+  {"name": "some-other-tag", "commit": {"sha": "eee555"}},
+  {"name": "REL_14_11", "commit": {"sha": "fff666"}}
 ]
