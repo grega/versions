@@ -54,6 +54,16 @@ packages:
     url: https://github.com/rust-lang/rust/releases
 
   # Frameworks & Libraries
+  - name: Astro
+    source: github
+    repo: withastro/astro
+    tagPattern: "^astro@\\d"
+    tagReplace:
+      "astro@": ""
+    categories:
+      - Frameworks
+    url: https://github.com/withastro/astro/releases
+
   - name: Django
     source: pypi
     package: Django
