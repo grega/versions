@@ -128,7 +128,7 @@ packages:
     source: npm
     package: react
     categories:
-      - Frameworks
+      - Libraries
     url: https://github.com/facebook/react/releases
 
   - name: Svelte
@@ -147,7 +147,7 @@ packages:
     source: npm
     package: tailwindcss
     categories:
-      - Frameworks
+      - Libraries
     url: https://github.com/tailwindlabs/tailwindcss/releases
 
   - name: Vite
@@ -171,19 +171,19 @@ packages:
   - name: Bootstrap
     source: npm
     package: bootstrap
-    categories: Frameworks
+    categories: Libraries
     url: https://github.com/twbs/bootstrap/releases
 
   - name: Chart.js
     source: npm
     package: chart.js
-    categories: Frameworks
+    categories: Libraries
     url: https://github.com/chartjs/Chart.js/releases
 
   - name: D3
     source: npm
     package: d3
-    categories: Frameworks
+    categories: Libraries
     url: https://github.com/d3/d3/releases
 
   - name: React Native
@@ -195,7 +195,7 @@ packages:
   - name: Three.js
     source: npm
     package: three
-    categories: Frameworks
+    categories: Libraries
     url: https://github.com/mrdoob/three.js/releases
 
   - name: WordPress
