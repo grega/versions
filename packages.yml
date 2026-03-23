@@ -162,6 +162,42 @@ packages:
     categories: Frameworks
     url: https://github.com/vuejs/core/releases
 
+  - name: Angular
+    source: npm
+    package: "@angular/core"
+    categories: Frameworks
+    url: https://github.com/angular/angular/releases
+
+  - name: Bootstrap
+    source: npm
+    package: bootstrap
+    categories: Frameworks
+    url: https://github.com/twbs/bootstrap/releases
+
+  - name: Chart.js
+    source: npm
+    package: chart.js
+    categories: Frameworks
+    url: https://github.com/chartjs/Chart.js/releases
+
+  - name: D3
+    source: npm
+    package: d3
+    categories: Frameworks
+    url: https://github.com/d3/d3/releases
+
+  - name: React Native
+    source: npm
+    package: react-native
+    categories: Frameworks
+    url: https://github.com/facebook/react-native/releases
+
+  - name: Three.js
+    source: npm
+    package: three
+    categories: Frameworks
+    url: https://github.com/mrdoob/three.js/releases
+
   - name: WordPress
     source: endoflife
     product: wordpress
@@ -241,6 +277,22 @@ packages:
     package: pandas
     categories: Python
     url: https://github.com/pandas-dev/pandas/releases
+
+  - name: PyTorch
+    source: pypi
+    package: torch
+    categories:
+      - Python
+      - Frameworks
+    url: https://github.com/pytorch/pytorch/releases
+
+  - name: TensorFlow
+    source: pypi
+    package: tensorflow
+    categories:
+      - Python
+      - Frameworks
+    url: https://github.com/tensorflow/tensorflow/releases
 
   # Go Ecosystem
   - name: cobra
@@ -334,6 +386,12 @@ packages:
     product: nginx
     categories: DevOps
     url: https://nginx.org/en/CHANGES
+
+  - name: Kubernetes
+    source: github
+    repo: kubernetes/kubernetes
+    categories: DevOps
+    url: https://github.com/kubernetes/kubernetes/releases
 
   - name: Terraform
     source: github
