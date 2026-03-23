@@ -104,6 +104,22 @@ packages:
       - Go
     url: https://github.com/gin-gonic/gin/releases
 
+  - name: Jekyll
+    source: rubygems
+    gem: jekyll
+    categories:
+      - Frameworks
+      - Ruby
+    url: https://github.com/jekyll/jekyll/releases
+
+  - name: Eleventy
+    source: npm
+    package: "@11ty/eleventy"
+    categories:
+      - Frameworks
+      - Node.js
+    url: https://github.com/11ty/eleventy/releases
+
   - name: Electron
     source: npm
     package: electron
@@ -183,6 +199,12 @@ packages:
     package: bootstrap
     categories: Libraries
     url: https://github.com/twbs/bootstrap/releases
+
+  - name: Bulma
+    source: npm
+    package: bulma
+    categories: Libraries
+    url: https://github.com/jgthms/bulma/releases
 
   - name: Chart.js
     source: npm
