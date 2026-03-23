@@ -484,6 +484,12 @@ packages:
     categories: Tools
     url: https://github.com/microsoft/TypeScript/releases
 
+  - name: webpack
+    source: npm
+    package: webpack
+    categories: Tools
+    url: https://github.com/webpack/webpack/releases
+
   - name: Yarn
     source: npm
     package: yarn
