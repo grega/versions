@@ -83,8 +83,11 @@
 
 	function timeSince(date: string): string {
 		if (!date) return '';
-		const diff = Date.now() - new Date(date).getTime();
-		const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+		const now = new Date();
+		const then = new Date(date);
+		const todayUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+		const thenUTC = Date.UTC(then.getUTCFullYear(), then.getUTCMonth(), then.getUTCDate());
+		const days = Math.floor((todayUTC - thenUTC) / (1000 * 60 * 60 * 24));
 		if (days === 0) return 'today';
 		if (days === 1) return '1 day ago';
 		if (days < 30) return `${days} days ago`;
@@ -117,7 +120,8 @@
 			<h1><a href="/">Versions</a></h1>
 			<p class="tagline">Release information for a selection of languages, frameworks, and tools</p>
 			<span class="built-at">
-				Updated {timeSince(data.builtAt)} &middot; {new Date(data.builtAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+				Updated <time datetime={data.builtAt}>{timeSince(data.builtAt)} &middot; {new Date(data.builtAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</time>
+				&middot; <a href="https://github.com/grega/versions" target="_blank" rel="noopener" class="github-link">GitHub</a>
 			</span>
 		</div>
 		<div class="controls">
@@ -296,6 +300,15 @@
 		color: #999;
 		font-size: 0.8rem;
 		margin-left: auto;
+	}
+
+	.github-link {
+		color: #999;
+		text-decoration: underline;
+	}
+
+	.github-link:hover {
+		color: #333;
 	}
 
 	.controls {
