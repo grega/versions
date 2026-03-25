@@ -122,7 +122,13 @@ git remote add dokku dokku@your-server:versions
 git push dokku main
 ```
 
-The Dockerfile builds and serves the static site with Node.js. An `app.json` cron task rebuilds the site every 6 hours in order to update the version data. To trigger a rebuild manually:
+The Dockerfile builds and serves the static site with Node.js. An `app.json` cron task rebuilds the site every 6 hours in order to update the version data. To trigger a rebuild manually either:
+
+```bash
+dokku ps:rebuild versions
+```
+
+Or:
 
 ```bash
 dokku cron:list versions
