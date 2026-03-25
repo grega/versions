@@ -1,8 +1,0 @@
-{
-  "cron": [
-    {
-      "command": "npm run build",
-      "schedule": "0 */6 * * *"
-    }
-  ]
-}

@@ -9,7 +9,7 @@ dokku apps:create versions
 
 ## Set the GitHub token
 
-The token is needed both at build time (initial deploy) and at runtime (scheduled rebuilds via `app.json` cron).
+The token is needed both at build time (initial deploy) and at runtime (scheduled rebuilds).
 
 ```bash
 dokku config:set versions GITHUB_TOKEN=ghp_your_token_here
@@ -44,7 +44,7 @@ git remote add dokku dokku@your-server:versions
 git push dokku main
 ```
 
-Dokku detects the `Dockerfile`, builds the image (fetching version data during `npm run build`), and starts the container serving static files on port 5000.
+Dokku detects the `Dockerfile`, builds the image (fetching version data during `npm run build`), and starts the container serving static files on port 5000. The container automatically rebuilds the site every 6 hours to refresh version data.
 
 ## Set up port mapping
 
@@ -66,14 +66,7 @@ dokku letsencrypt:enable versions
 
 ## Scheduled rebuilds
 
-Version data is frozen at build time. The `app.json` file defines a [scheduled cron task](https://dokku.com/docs/processes/scheduled-cron-tasks/) that runs `npm run build` inside the container every 6 hours to refresh the data.
-
-This works automatically after deploy - no extra setup needed. You can manage it with:
-
-```bash
-dokku cron:list versions        # list scheduled tasks
-dokku cron:report versions      # show cron configuration
-```
+Version data is frozen at build time. The web container runs a background loop (`start.sh`) that rebuilds the site every 6 hours to refresh version data. This works automatically after deploy - no extra setup needed.
 
 ## Useful commands
 
