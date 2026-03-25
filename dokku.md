@@ -44,7 +44,7 @@ git remote add dokku dokku@your-server:versions
 git push dokku main
 ```
 
-Dokku detects the `Dockerfile`, builds the image (fetching version data during `npm run build`), and starts the container serving static files on port 5000. The container automatically rebuilds the site every 6 hours to refresh version data.
+Dokku detects the `Dockerfile`, builds the image (fetching version data during `npm run build`), and starts the container serving static files on port 5000. The container automatically rebuilds the site every X hours (defined in `start.sh`) to refresh version data.
 
 ## Set up port mapping
 
@@ -66,7 +66,7 @@ dokku letsencrypt:enable versions
 
 ## Scheduled rebuilds
 
-Version data is frozen at build time. The web container runs a background loop (`start.sh`) that rebuilds the site every 6 hours to refresh version data. This works automatically after deploy - no extra setup needed.
+Version data is frozen at build time. The web container runs a background loop (`start.sh`) that rebuilds the site every X hours to refresh version data. This works automatically after deploy - no extra setup needed.
 
 ## Useful commands
 

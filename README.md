@@ -122,7 +122,7 @@ git remote add dokku dokku@your-server:versions
 git push dokku main
 ```
 
-The Dockerfile builds and serves the static site with Node.js. The container automatically rebuilds the site every 6 hours to refresh version data (see `start.sh`). To trigger a rebuild manually:
+The Dockerfile builds and serves the static site with Node.js. The container automatically rebuilds the site every X hours (defined in `start.sh`) to refresh version data. To trigger a rebuild manually:
 
 ```bash
 dokku ps:rebuild versions
