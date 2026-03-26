@@ -43,7 +43,7 @@ Edit `packages.yml` and add an entry. Available sources:
 | `rubygems` | `gem` | `gem: rails` |
 | `npm` | `package` | `package: npm` |
 | `pypi` | `package` | `package: django` |
-| `nodejs` | (none) | Built-in Node.js dist API |
+| `nodejs` | (none) | n/a (uses Node.js' API directly) |
 | `endoflife` | `product` | `product: python` ([products list](https://endoflife.date/api/all.json)) |
 
 Example:
