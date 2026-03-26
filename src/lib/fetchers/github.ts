@@ -1,12 +1,21 @@
 import { env } from '$env/dynamic/private';
 import type { PackageConfig, PackageInfo, Release } from '../types.js';
 
-function headers(): Record<string, string> {
+function headers(auth = true): Record<string, string> {
 	const h: Record<string, string> = { Accept: 'application/vnd.github+json' };
-	if (env.GITHUB_TOKEN) {
+	if (auth && env.GITHUB_TOKEN) {
 		h['Authorization'] = `Bearer ${env.GITHUB_TOKEN}`;
 	}
 	return h;
+}
+
+async function githubFetch(url: string): Promise<Response> {
+	const res = await fetch(url, { headers: headers() });
+	if (res.status === 403 && env.GITHUB_TOKEN) {
+		// Some orgs reject tokens based on lifetime policy; retry without auth for public data
+		return fetch(url, { headers: headers(false) });
+	}
+	return res;
 }
 
 function cleanVersion(tag: string, tagReplace?: Record<string, string>): string {
@@ -32,7 +41,7 @@ async function fetchReleases(
 
 	for (let page = 1; page <= MAX_PAGES; page++) {
 		const url = `https://api.github.com/repos/${repo}/releases?per_page=30&page=${page}`;
-		const res = await fetch(url, { headers: headers() });
+		const res = await githubFetch(url);
 		if (!res.ok) throw new Error(`GitHub releases API returned ${res.status}`);
 		const data = await res.json();
 
@@ -65,7 +74,7 @@ async function fetchTags(
 	tagReplace: Record<string, string>
 ): Promise<Release[]> {
 	const url = `https://api.github.com/repos/${repo}/tags?per_page=50`;
-	const res = await fetch(url, { headers: headers() });
+	const res = await githubFetch(url);
 	if (!res.ok) throw new Error(`GitHub tags API returned ${res.status}`);
 	const data = await res.json();
 
@@ -78,7 +87,7 @@ async function fetchTags(
 			const sha = (t.commit as Record<string, unknown>)?.sha;
 			if (!sha) return '';
 			const commitUrl = `https://api.github.com/repos/${repo}/git/commits/${sha}`;
-			const commitRes = await fetch(commitUrl, { headers: headers() });
+			const commitRes = await githubFetch(commitUrl);
 			if (!commitRes.ok) return '';
 			const commit = await commitRes.json();
 			const dateStr = commit.committer?.date ?? commit.author?.date ?? '';

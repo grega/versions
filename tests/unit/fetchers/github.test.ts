@@ -3,7 +3,7 @@ import releasesFixture from '../../fixtures/github-releases.json';
 import tagsFixture from '../../fixtures/github-tags.json';
 
 vi.mock('$env/dynamic/private', () => ({
-	env: { GITHUB_TOKEN: '' }
+	env: { GITHUB_TOKEN: 'test-token' }
 }));
 
 import { fetchGitHub } from '$lib/fetchers/github.js';
@@ -228,10 +228,27 @@ describe('fetchGitHub', () => {
 		expect(fetch).toHaveBeenCalledTimes(2);
 	});
 
-	it('returns error on API failure', async () => {
-		vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-			new Response('', { status: 403 })
-		);
+	it('retries without auth on 403 from org token policy', async () => {
+		vi.spyOn(globalThis, 'fetch')
+			.mockResolvedValueOnce(new Response('', { status: 403 }))
+			.mockResolvedValueOnce(
+				new Response(JSON.stringify(releasesFixture), { status: 200 })
+			);
+
+		const result = await fetchGitHub(baseConfig);
+
+		expect(fetch).toHaveBeenCalledTimes(2);
+		// Second call should not include Authorization header
+		const secondCall = vi.mocked(fetch).mock.calls[1];
+		const secondHeaders = (secondCall[1]?.headers as Record<string, string>) ?? {};
+		expect(secondHeaders['Authorization']).toBeUndefined();
+		expect(result.latest?.version).toBe('2.0.1');
+	});
+
+	it('throws when both auth and no-auth requests fail', async () => {
+		vi.spyOn(globalThis, 'fetch')
+			.mockResolvedValueOnce(new Response('', { status: 403 }))
+			.mockResolvedValueOnce(new Response('', { status: 403 }));
 
 		await expect(fetchGitHub(baseConfig)).rejects.toThrow('403');
 	});
