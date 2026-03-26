@@ -64,6 +64,16 @@ packages:
       - Frameworks
     url: https://github.com/withastro/astro/releases
 
+  - name: Blockly
+    source: github
+    repo: RaspberryPiFoundation/blockly
+    tagPattern: "^blockly-v\\d+\\.\\d+\\.\\d+$"
+    tagReplace:
+      "blockly-": ""
+    categories:
+      - Libraries
+    url: https://github.com/RaspberryPiFoundation/blockly/releases
+
   - name: Django
     source: pypi
     package: Django
