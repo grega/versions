@@ -2,17 +2,33 @@
 	import type { PackageInfo } from '$lib/types.js';
 	import { parseFilterParams, buildFilterParams } from '$lib/url.js';
 	import { browser } from '$app/environment';
-	import { goto, afterNavigate, onNavigate } from '$app/navigation';
+	import { goto, afterNavigate } from '$app/navigation';
+	import { onMount } from 'svelte';
+
+	type ThemePreference = 'system' | 'light' | 'dark';
+
+	const themeOrder: ThemePreference[] = ['system', 'light', 'dark'];
+
+	function isThemePreference(value: string | null): value is ThemePreference {
+		return value === 'system' || value === 'light' || value === 'dark';
+	}
 
 	let { data } = $props();
 	let search = $state('');
 	let activeCategory = $state('All');
 	let expanded = $state<Record<string, boolean>>({});
+	let themePreference = $state<ThemePreference>('system');
+	let systemPrefersDark = $state(false);
 
 	if (browser) {
 		const initialFilter = parseFilterParams(new URLSearchParams(window.location.search));
 		search = initialFilter.search;
 		activeCategory = initialFilter.category;
+		const initialTheme = document.documentElement.dataset.themePreference ?? null;
+		if (isThemePreference(initialTheme)) {
+			themePreference = initialTheme;
+		}
+		systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 	}
 
 	afterNavigate(({ from, to }) => {
@@ -57,6 +73,40 @@
 		return date;
 	}
 
+	const resolvedTheme = $derived(
+		themePreference === 'system' ? (systemPrefersDark ? 'dark' : 'light') : themePreference
+	);
+
+	onMount(() => {
+		const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+		const storedPreference = window.localStorage.getItem('theme-preference');
+
+		systemPrefersDark = mediaQuery.matches;
+		if (isThemePreference(storedPreference)) {
+			themePreference = storedPreference;
+		}
+
+		const handleChange = (event: MediaQueryListEvent) => {
+			systemPrefersDark = event.matches;
+		};
+
+		mediaQuery.addEventListener('change', handleChange);
+
+		return () => mediaQuery.removeEventListener('change', handleChange);
+	});
+
+	$effect(() => {
+		if (!browser) return;
+
+		const root = document.documentElement;
+		const appliedTheme = resolvedTheme;
+
+		root.dataset.themePreference = themePreference;
+		root.dataset.theme = appliedTheme;
+		root.style.colorScheme = appliedTheme;
+		window.localStorage.setItem('theme-preference', themePreference);
+	});
+
 	let searchInput: HTMLInputElement;
 
 	function handleKeydown(e: KeyboardEvent) {
@@ -97,6 +147,21 @@
 		const years = Math.floor(months / 12);
 		return years === 1 ? '1 year ago' : `${years} years ago`;
 	}
+
+	function cycleThemePreference() {
+		const currentIndex = themeOrder.indexOf(themePreference);
+		const nextIndex = (currentIndex + 1) % themeOrder.length;
+		themePreference = themeOrder[nextIndex];
+	}
+
+	function themeLabel(theme: ThemePreference): string {
+		if (theme === 'system') return 'Auto';
+		if (theme === 'light') return 'Light';
+		return 'Dark';
+	}
+
+	const nextThemePreference = $derived(themeOrder[(themeOrder.indexOf(themePreference) + 1) % themeOrder.length]);
+	const themeButtonLabel = $derived(`Theme: ${themeLabel(themePreference)}. Switch to ${themeLabel(nextThemePreference)}.`);
 </script>
 
 {#snippet copyIcon(version: string)}
@@ -112,6 +177,25 @@
 	</span>
 {/snippet}
 
+{#snippet themeIcon(theme: ThemePreference)}
+	{#if theme === 'system'}
+		<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+			<rect x="2.25" y="2.5" width="11.5" height="8" rx="1.75"/>
+			<path d="M6 13.5h4"/>
+			<path d="M8 10.5v3"/>
+		</svg>
+	{:else if theme === 'light'}
+		<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+			<circle cx="8" cy="8" r="3"/>
+			<path d="M8 1.5v1.75M8 12.75V14.5M3.4 3.4l1.25 1.25M11.35 11.35l1.25 1.25M1.5 8h1.75M12.75 8h1.75M3.4 12.6l1.25-1.25M11.35 4.65l1.25-1.25"/>
+		</svg>
+	{:else}
+		<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+			<path d="M10.95 1.8a5.9 5.9 0 1 0 3.25 10.75A6.35 6.35 0 0 1 10.95 1.8Z"/>
+		</svg>
+	{/if}
+{/snippet}
+
 <svelte:window onkeydown={handleKeydown} />
 
 <div class="container">
@@ -119,10 +203,22 @@
 		<div class="header-top">
 			<h1><a href="/">Versions</a></h1>
 			<p class="tagline">Release information for a selection of languages, frameworks, and tools</p>
-			<span class="built-at">
-				Updated <time datetime={data.builtAt}>{timeSince(data.builtAt)} &middot; {new Date(data.builtAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</time>
-				&middot; <a href="https://github.com/grega/versions" target="_blank" rel="noopener" class="github-link">GitHub</a>
-			</span>
+			<div class="header-meta">
+				<span class="built-at">
+					<button
+						type="button"
+						class="theme-btn"
+						onclick={cycleThemePreference}
+						aria-label={themeButtonLabel}
+						title={themeButtonLabel}
+					>
+						{@render themeIcon(themePreference)}
+						<span class="theme-value">{themeLabel(themePreference)}</span>
+					</button>
+					Updated <time datetime={data.builtAt}>{timeSince(data.builtAt)} &middot; {new Date(data.builtAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</time>
+					&middot; <a href="https://github.com/grega/versions" target="_blank" rel="noopener" class="github-link">GitHub</a>
+				</span>
+			</div>
 		</div>
 		<div class="controls">
 			<div class="search-wrapper">
@@ -178,30 +274,32 @@
 					{:else}
 						<div class="version-info">
 							{#if pkg.latestStable}
+								{@const stable = pkg.latestStable}
 								<div class="version-row">
-									<span class="label stable">stable</span>
-									<button class="version copy-btn" onclick={() => copyVersion(pkg.latestStable.version)} title="Copy version">
-										{pkg.latestStable.version}
-										{@render copyIcon(pkg.latestStable.version)}
+											<span class="label stable">stable</span>
+											<button class="version copy-btn" onclick={() => copyVersion(stable.version)} title="Copy version">
+												{stable.version}
+												{@render copyIcon(stable.version)}
 									</button>
-									{#if pkg.latestStable.date}
-										<span class="date" title={pkg.latestStable.date}>{timeSince(pkg.latestStable.date)}</span>
+											{#if stable.date}
+												<span class="date" title={stable.date}>{timeSince(stable.date)}</span>
 									{/if}
-									{#if pkg.latestStable.lts && pkg.latestStable.lts !== false}
+											{#if stable.lts}
 										<span class="lts-badge">LTS</span>
 									{/if}
 								</div>
 							{/if}
 
 							{#if pkg.latest && pkg.latest.prerelease && pkg.latest.version !== pkg.latestStable?.version}
+										{@const latest = pkg.latest}
 								<div class="version-row">
 									<span class="label prerelease">pre</span>
-									<button class="version copy-btn" onclick={() => copyVersion(pkg.latest.version)} title="Copy version">
-										{pkg.latest.version}
-										{@render copyIcon(pkg.latest.version)}
+											<button class="version copy-btn" onclick={() => copyVersion(latest.version)} title="Copy version">
+												{latest.version}
+												{@render copyIcon(latest.version)}
 									</button>
-									{#if pkg.latest.date}
-										<span class="date" title={pkg.latest.date}>{timeSince(pkg.latest.date)}</span>
+											{#if latest.date}
+												<span class="date" title={latest.date}>{timeSince(latest.date)}</span>
 									{/if}
 								</div>
 							{/if}
@@ -237,7 +335,7 @@
 													{:else}
 														<span class="label stable">stable</span>
 													{/if}
-													{#if release.lts && release.lts !== false}
+													{#if release.lts}
 														<span class="lts-badge">LTS</span>
 													{/if}
 												</td>
@@ -255,21 +353,172 @@
 </div>
 
 <style>
+	:global(:root) {
+		--bg: #f5f5f5;
+		--text: #1a1f28;
+		--muted: #5e6774;
+		--muted-soft: #808996;
+		--border: #d7dbe3;
+		--border-strong: #bcc4cf;
+		--surface: rgba(255, 255, 255, 0.92);
+		--surface-strong: #ffffff;
+		--surface-muted: rgba(248, 249, 251, 0.96);
+		--shadow: 0 18px 48px rgba(42, 51, 63, 0.08);
+		--card-shadow: none;
+		--card-shadow-hover: 0 2px 8px rgba(0, 0, 0, 0.08);
+		--accent: #2e6fae;
+		--accent-strong: #164f85;
+		--accent-soft: rgba(46, 111, 174, 0.18);
+		--badge-bg: #e9eef5;
+		--badge-text: #4f5d6f;
+		--stable-bg: #e5f4ea;
+		--stable-text: #1f7a3b;
+		--pre-bg: #fff1dd;
+		--pre-text: #a55a07;
+		--lts-bg: #e2eefb;
+		--lts-text: #155a9a;
+		--error-bg: #fbefef;
+		--error-border: #e4bbbb;
+		--error-text: #b74040;
+		--active-bg: #202a36;
+		--active-text: #f8fafc;
+		--kbd-bg: #f3f4f7;
+		--kbd-shadow: #cfd5df;
+	}
+
+	:global(html) {
+		color-scheme: light;
+	}
+
+	:global(html[data-theme='dark']) {
+		color-scheme: dark;
+		--bg: #111418;
+		--text: #edf2f7;
+		--muted: #a4aebb;
+		--muted-soft: #8190a1;
+		--border: #2c3845;
+		--border-strong: #415063;
+		--surface: rgba(19, 26, 34, 0.92);
+		--surface-strong: #18212b;
+		--surface-muted: rgba(24, 33, 43, 0.96);
+		--shadow: 0 22px 52px rgba(0, 0, 0, 0.34);
+		--card-shadow: none;
+		--card-shadow-hover: 0 8px 20px rgba(0, 0, 0, 0.34);
+		--accent: #81bcff;
+		--accent-strong: #b8daff;
+		--accent-soft: rgba(129, 188, 255, 0.2);
+		--badge-bg: #22303f;
+		--badge-text: #c0cfdd;
+		--stable-bg: #193728;
+		--stable-text: #8fe0a6;
+		--pre-bg: #442f14;
+		--pre-text: #ffc987;
+		--lts-bg: #19354e;
+		--lts-text: #8cc6ff;
+		--error-bg: #311c20;
+		--error-border: #6f3b43;
+		--error-text: #ffb8bf;
+		--active-bg: #f1f5f9;
+		--active-text: #111a22;
+		--kbd-bg: #18212b;
+		--kbd-shadow: #0d131a;
+	}
+
+	@media (prefers-color-scheme: dark) {
+		:global(html:not([data-theme='light'])) {
+			color-scheme: dark;
+			--bg: #111418;
+			--text: #edf2f7;
+			--muted: #a4aebb;
+			--muted-soft: #8190a1;
+			--border: #2c3845;
+			--border-strong: #415063;
+			--surface: rgba(19, 26, 34, 0.92);
+			--surface-strong: #18212b;
+			--surface-muted: rgba(24, 33, 43, 0.96);
+			--shadow: 0 22px 52px rgba(0, 0, 0, 0.34);
+			--card-shadow: none;
+			--card-shadow-hover: 0 8px 20px rgba(0, 0, 0, 0.34);
+			--accent: #81bcff;
+			--accent-strong: #b8daff;
+			--accent-soft: rgba(129, 188, 255, 0.2);
+			--badge-bg: #22303f;
+			--badge-text: #c0cfdd;
+			--stable-bg: #193728;
+			--stable-text: #8fe0a6;
+			--pre-bg: #442f14;
+			--pre-text: #ffc987;
+			--lts-bg: #19354e;
+			--lts-text: #8cc6ff;
+			--error-bg: #311c20;
+			--error-border: #6f3b43;
+			--error-text: #ffb8bf;
+			--active-bg: #f1f5f9;
+			--active-text: #111a22;
+			--kbd-bg: #18212b;
+			--kbd-shadow: #0d131a;
+		}
+	}
+
 	:global(body) {
 		margin: 0;
 		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-		background: #f5f5f5;
-		color: #1a1a1a;
+		background: var(--bg);
+		color: var(--text);
+		transition: background 0.2s ease, color 0.2s ease;
 	}
 
 	.container {
 		max-width: 1100px;
 		margin: 0 auto;
-		padding: 1.5rem;
+		padding: 1.25rem 1.5rem 2rem;
 	}
 
 	header {
 		margin-bottom: 1.5rem;
+	}
+
+	.theme-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		border: none;
+		background: transparent;
+		color: var(--muted);
+		font-size: inherit;
+		font-weight: 600;
+		padding: 0;
+		padding-right: 0.55rem;
+		margin-right: 0.1rem;
+		border-radius: 0;
+		border-right: 1px solid var(--border);
+		cursor: pointer;
+		transition: background-color 0.15s ease, color 0.15s ease;
+	}
+
+	.theme-btn:hover {
+		color: var(--text);
+	}
+
+	.theme-btn svg {
+		flex-shrink: 0;
+	}
+
+	.theme-value {
+		line-height: 1;
+	}
+
+	.theme-btn:focus-visible,
+	.search-clear:focus-visible,
+	.chip:focus-visible,
+	.expand-btn:focus-visible,
+	.source-link:focus-visible,
+	.copy-btn:focus-visible,
+	.releases a:focus-visible,
+	.github-link:focus-visible,
+	h1 a:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 3px;
 	}
 
 	.header-top {
@@ -277,6 +526,12 @@
 		align-items: baseline;
 		gap: 1rem;
 		margin-bottom: 1rem;
+	}
+
+	.header-meta {
+		display: flex;
+		align-items: center;
+		margin-left: auto;
 	}
 
 	h1 {
@@ -292,23 +547,26 @@
 
 	.tagline {
 		margin: 0;
-		color: #666;
+		color: var(--muted);
 		font-size: 0.9rem;
 	}
 
 	.built-at {
-		color: #999;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		flex-wrap: wrap;
+		color: var(--muted-soft);
 		font-size: 0.8rem;
-		margin-left: auto;
 	}
 
 	.github-link {
-		color: #999;
+		color: var(--muted-soft);
 		text-decoration: underline;
 	}
 
 	.github-link:hover {
-		color: #333;
+		color: var(--text);
 	}
 
 	.controls {
@@ -325,19 +583,24 @@
 		width: 100%;
 		padding: 0.6rem 0.9rem;
 		padding-right: 2rem;
-		border: 1px solid #ddd;
+		border: 1px solid var(--border);
 		border-radius: 6px;
 		font-size: 0.95rem;
-		background: white;
+		background: var(--surface);
+		color: var(--text);
 		box-sizing: border-box;
 		transition: border-color 0.15s, box-shadow 0.15s;
 	}
 
+	.search::placeholder {
+		color: var(--muted-soft);
+	}
+
 	.search:focus {
 		outline: none;
-		border-color: #4a90d9;
-		box-shadow: 0 0 0 4px rgba(74, 144, 217, 0.35);
-		background: #f8fbff;
+		border-color: var(--accent);
+		box-shadow: 0 0 0 4px var(--accent-soft);
+		background: var(--surface-strong);
 	}
 
 	.search-actions {
@@ -353,7 +616,7 @@
 	.search-clear {
 		background: none;
 		border: none;
-		color: #999;
+		color: var(--muted-soft);
 		cursor: pointer;
 		font-size: 0.85rem;
 		padding: 0.2rem 0.3rem;
@@ -362,22 +625,22 @@
 	}
 
 	.search-clear:hover {
-		color: #333;
-		background: #eee;
+		color: var(--text);
+		background: var(--surface-muted);
 	}
 
 	.search-kbd {
 		font-size: 0.75rem;
 		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 		font-weight: 500;
-		color: #999;
-		background: #f5f5f5;
-		border: 1px solid #ddd;
+		color: var(--muted-soft);
+		background: var(--kbd-bg);
+		border: 1px solid var(--border);
 		border-radius: 4px;
 		padding: 0.1rem 0.4rem;
 		line-height: 1.4;
 		pointer-events: none;
-		box-shadow: 0 1px 0 #ccc;
+		box-shadow: 0 1px 0 var(--kbd-shadow);
 	}
 
 	.search-wrapper > .search-kbd {
@@ -395,22 +658,23 @@
 
 	.chip {
 		padding: 0.3rem 0.7rem;
-		border: 1px solid #ddd;
+		border: 1px solid var(--border);
 		border-radius: 20px;
-		background: white;
+		background: var(--surface);
+		color: var(--text);
 		font-size: 0.8rem;
 		cursor: pointer;
 		transition: all 0.15s;
 	}
 
 	.chip:hover {
-		border-color: #999;
+		border-color: var(--border-strong);
 	}
 
 	.chip.active {
-		background: #1a1a1a;
-		color: white;
-		border-color: #1a1a1a;
+		background: var(--active-bg);
+		color: var(--active-text);
+		border-color: var(--active-bg);
 	}
 
 	.grid {
@@ -420,20 +684,22 @@
 	}
 
 	.card {
-		background: white;
+		background: var(--surface);
 		border-radius: 8px;
 		padding: 1.1rem;
-		border: 1px solid #e0e0e0;
-		transition: box-shadow 0.15s;
+		border: 1px solid var(--border);
+		transition: box-shadow 0.15s, border-color 0.15s;
+		box-shadow: var(--card-shadow);
+		backdrop-filter: blur(14px);
 	}
 
 	.card:hover {
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+		box-shadow: var(--card-shadow-hover);
 	}
 
 	.card.error {
-		border-color: #e8c4c4;
-		background: #fdf5f5;
+		border-color: var(--error-border);
+		background: var(--error-bg);
 	}
 
 	.card-header {
@@ -459,8 +725,8 @@
 		font-size: 0.7rem;
 		padding: 0.15rem 0.5rem;
 		border-radius: 12px;
-		background: #eef2f7;
-		color: #555;
+		background: var(--badge-bg);
+		color: var(--badge-text);
 		text-transform: uppercase;
 		letter-spacing: 0.03em;
 		font-weight: 500;
@@ -490,21 +756,21 @@
 	}
 
 	.label.stable {
-		background: #e6f4ea;
-		color: #1a7f37;
+		background: var(--stable-bg);
+		color: var(--stable-text);
 	}
 
 	.label.prerelease {
-		background: #fff3e0;
-		color: #b35c00;
+		background: var(--pre-bg);
+		color: var(--pre-text);
 	}
 
 	.lts-badge {
 		font-size: 0.65rem;
 		padding: 0.1rem 0.35rem;
 		border-radius: 3px;
-		background: #e3f2fd;
-		color: #1565c0;
+		background: var(--lts-bg);
+		color: var(--lts-text);
 		font-weight: 600;
 	}
 
@@ -527,7 +793,7 @@
 	}
 
 	.copy-icon {
-		color: #777;
+		color: var(--muted);
 		display: inline-flex;
 		align-items: center;
 		vertical-align: middle;
@@ -535,17 +801,17 @@
 	}
 
 	.copy-btn:hover .copy-icon {
-		color: #4a90d9;
+		color: var(--accent);
 	}
 
 	.date {
-		color: #888;
+		color: var(--muted-soft);
 		font-size: 0.8rem;
 		margin-left: auto;
 	}
 
 	.error-msg {
-		color: #c33;
+		color: var(--error-text);
 		font-size: 0.85rem;
 		margin: 0;
 	}
@@ -560,29 +826,29 @@
 		background: none;
 		border: none;
 		font-size: 0.8rem;
-		color: #4a90d9;
+		color: var(--accent);
 		cursor: pointer;
 		padding: 0.2rem 0;
 	}
 
 	.expand-btn:hover {
-		color: #2a6cb9;
+		color: var(--accent-strong);
 	}
 
 	.source-link {
 		font-size: 0.8rem;
-		color: #666;
+		color: var(--muted);
 		text-decoration: none;
 	}
 
 	.source-link:hover {
-		color: #333;
+		color: var(--text);
 		text-decoration: underline;
 	}
 
 	.releases {
 		margin-top: 0.75rem;
-		border-top: 1px solid #eee;
+		border-top: 1px solid var(--border);
 		padding-top: 0.5rem;
 	}
 
@@ -598,28 +864,51 @@
 
 	.releases a {
 		font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
-		color: #4a90d9;
+		color: var(--accent);
 		text-decoration: none;
 	}
 
 	.releases a:hover {
+		color: var(--accent-strong);
 		text-decoration: underline;
 	}
 
 	.empty {
 		text-align: center;
-		color: #888;
+		color: var(--muted-soft);
 		padding: 3rem;
 	}
 
 	@media (max-width: 600px) {
+		.container {
+			padding-inline: 1rem;
+		}
+
+		.theme-btn {
+			justify-content: flex-start;
+		}
+
 		.grid {
 			grid-template-columns: 1fr;
 		}
 
 		.header-top {
 			flex-direction: column;
-			gap: 0.3rem;
+			gap: 0.5rem;
+		}
+
+		h1 {
+			margin-bottom: 0.2rem;
+		}
+
+		.tagline {
+			margin-bottom: 0.2rem;
+		}
+
+		.header-meta {
+			width: 100%;
+			align-items: stretch;
+			margin-left: 0;
 		}
 	}
 </style>
