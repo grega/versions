@@ -3,8 +3,24 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="color-scheme" content="light dark" />
 		<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>" />
 		<title>Versions</title>
+		<script>
+			(() => {
+				const storageKey = 'theme-preference';
+				const root = document.documentElement;
+				const stored = window.localStorage.getItem(storageKey);
+				const preference = stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system';
+				const resolved = preference === 'system'
+					? window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+					: preference;
+
+				root.dataset.themePreference = preference;
+				root.dataset.theme = resolved;
+				root.style.colorScheme = resolved;
+			})();
+		</script>
 		%sveltekit.head%
 	</head>
 	<body>
