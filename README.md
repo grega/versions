@@ -24,6 +24,14 @@ Open http://localhost:5173. The dev server fetches version data live on each pag
 
 A `GITHUB_TOKEN` is needed to avoid GitHub API rate limits (60 req/hr without one, 5,000 with). Create a token at https://github.com/settings/tokens - no scopes needed for public repos. Some GitHub orgs restrict fine-grained tokens by lifetime policy (eg. "token lifetime cannot be > 1 year"), causing 403 errors - the fetcher automatically retries without auth in these cases.
 
+### API
+
+Package data can be queried via the `/api/versions` endpoint, which returns JSON:
+
+```bash
+curl http://localhost:5173/api/versions
+```
+
 ## Building
 
 ```
