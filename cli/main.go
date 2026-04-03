@@ -1,0 +1,584 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"os"
+	"strings"
+
+	"github.com/atotto/clipboard"
+	"github.com/charmbracelet/bubbles/spinner"
+	"github.com/charmbracelet/bubbles/textinput"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/sahilm/fuzzy"
+)
+
+const apiURL = "https://versions.gregdev.com/api/packages"
+
+// ── Styles ──────────────────────────────────────────────────────────────────
+
+var (
+	primaryColor   = lipgloss.Color("#7C3AED")
+	secondaryColor = lipgloss.Color("#A78BFA")
+	accentColor    = lipgloss.Color("#34D399")
+	warningColor   = lipgloss.Color("#FBBF24")
+	mutedColor     = lipgloss.Color("#6B7280")
+	textColor      = lipgloss.Color("#F9FAFB")
+	dimColor       = lipgloss.Color("#9CA3AF")
+
+	titleStyle = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(primaryColor).
+			MarginBottom(1)
+
+	subtitleStyle = lipgloss.NewStyle().
+			Foreground(secondaryColor)
+
+	inputStyle = lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(primaryColor).
+			Padding(0, 1).
+			MarginLeft(2)
+
+	latestBadge = lipgloss.NewStyle().
+			Background(accentColor).
+			Foreground(lipgloss.Color("#000000")).
+			Bold(true).
+			Padding(0, 1)
+
+	prereleaseBadge = lipgloss.NewStyle().
+			Background(warningColor).
+			Foreground(lipgloss.Color("#000000")).
+			Bold(true).
+			Padding(0, 1)
+
+	dateStyle = lipgloss.NewStyle().
+			Foreground(dimColor)
+
+	helpStyle = lipgloss.NewStyle().
+			Foreground(mutedColor).
+			MarginTop(1)
+
+	headerStyle = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(primaryColor).
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(primaryColor).
+			Padding(0, 2).
+			MarginBottom(1)
+
+	categoryStyle = lipgloss.NewStyle().
+			Foreground(secondaryColor).
+			Italic(true)
+
+	// Pre-defined text styles for rendering
+	matchHighlightSel  = lipgloss.NewStyle().Foreground(accentColor).Bold(true)
+	matchHighlight     = lipgloss.NewStyle().Foreground(secondaryColor)
+	nameSelectedStyle  = lipgloss.NewStyle().Foreground(textColor).Bold(true)
+	nameDimStyle       = lipgloss.NewStyle().Foreground(dimColor)
+	cursorStyle        = lipgloss.NewStyle().Foreground(accentColor).Bold(true)
+	verAccentStyle     = lipgloss.NewStyle().Foreground(accentColor)
+	verMutedStyle      = lipgloss.NewStyle().Foreground(mutedColor)
+	catDimStyle        = lipgloss.NewStyle().Foreground(dimColor)
+	relVerSelectedStyl = lipgloss.NewStyle().Foreground(textColor).Bold(true)
+	relVerDimStyle     = lipgloss.NewStyle().Foreground(dimColor)
+	relDateSelStyle    = lipgloss.NewStyle().Foreground(secondaryColor)
+	prerelDimStyle     = lipgloss.NewStyle().Foreground(warningColor)
+	dividerStyle       = lipgloss.NewStyle().Foreground(mutedColor)
+	scrollInfoStyle    = lipgloss.NewStyle().Foreground(mutedColor)
+	copiedStyle        = lipgloss.NewStyle().Foreground(accentColor).Bold(true)
+)
+
+// ── API Types ───────────────────────────────────────────────────────────────
+
+// FlexBool handles JSON values that may be bool or string.
+type FlexBool bool
+
+func (f *FlexBool) UnmarshalJSON(b []byte) error {
+	var boolVal bool
+	if err := json.Unmarshal(b, &boolVal); err == nil {
+		*f = FlexBool(boolVal)
+		return nil
+	}
+	var strVal string
+	if err := json.Unmarshal(b, &strVal); err == nil {
+		*f = FlexBool(strVal == "true" || strVal == "yes" || strVal == "1")
+		return nil
+	}
+	*f = false
+	return nil
+}
+
+type Release struct {
+	Version    string   `json:"version"`
+	Date       string   `json:"date"`
+	Prerelease FlexBool `json:"prerelease"`
+	LTS        FlexBool `json:"lts"`
+	URL        string   `json:"url"`
+}
+
+type Package struct {
+	Name         string    `json:"name"`
+	Categories   []string  `json:"categories"`
+	SourceURL    string    `json:"sourceUrl"`
+	Latest       Release   `json:"latest"`
+	LatestStable Release   `json:"latestStable"`
+	Releases     []Release `json:"releases"`
+}
+
+// ── Fuzzy search support ────────────────────────────────────────────────────
+
+type packageSource []Package
+
+func (p packageSource) String(i int) string { return p[i].Name }
+func (p packageSource) Len() int            { return len(p) }
+
+// ── Messages ────────────────────────────────────────────────────────────────
+
+type packagesFetchedMsg []Package
+
+type fetchErrMsg struct{ err error }
+
+func (e fetchErrMsg) Error() string { return e.err.Error() }
+
+// ── State ───────────────────────────────────────────────────────────────────
+
+type viewState int
+
+const (
+	stateLoading viewState = iota
+	stateSearch
+	stateDetail
+)
+
+// ── Model ───────────────────────────────────────────────────────────────────
+
+type model struct {
+	state    viewState
+	packages []Package
+	filtered []fuzzy.Match
+	input    textinput.Model
+	spinner  spinner.Model
+	cursor   int
+	err      error
+
+	selectedPkg   *Package
+	releaseCursor int
+	releaseOffset int
+	copiedVersion string
+	copiedPkgName string
+
+	width, height int
+}
+
+func initialModel() model {
+	ti := textinput.New()
+	ti.Placeholder = "Type to search packages..."
+	ti.Focus()
+	ti.CharLimit = 64
+	ti.Width = 40
+	ti.PromptStyle = lipgloss.NewStyle().Foreground(primaryColor)
+	ti.TextStyle = lipgloss.NewStyle().Foreground(textColor)
+	ti.Cursor.Style = lipgloss.NewStyle().Foreground(accentColor)
+
+	s := spinner.New()
+	s.Spinner = spinner.MiniDot
+	s.Style = lipgloss.NewStyle().Foreground(primaryColor)
+
+	return model{
+		state:   stateLoading,
+		input:   ti,
+		spinner: s,
+	}
+}
+
+func (m model) Init() tea.Cmd {
+	return tea.Batch(m.spinner.Tick, fetchPackages)
+}
+
+// ── Commands ────────────────────────────────────────────────────────────────
+
+func fetchPackages() tea.Msg {
+	resp, err := http.Get(apiURL)
+	if err != nil {
+		return fetchErrMsg{err}
+	}
+	defer resp.Body.Close()
+
+	var packages []Package
+	if err := json.NewDecoder(resp.Body).Decode(&packages); err != nil {
+		return fetchErrMsg{err}
+	}
+	return packagesFetchedMsg(packages)
+}
+
+// ── Filtering ───────────────────────────────────────────────────────────────
+
+func (m *model) filterPackages() {
+	query := m.input.Value()
+	if query == "" {
+		m.filtered = make([]fuzzy.Match, len(m.packages))
+		for i := range m.packages {
+			m.filtered[i] = fuzzy.Match{Index: i, Str: m.packages[i].Name}
+		}
+		return
+	}
+	m.filtered = fuzzy.FindFrom(query, packageSource(m.packages))
+	if m.cursor >= len(m.filtered) {
+		m.cursor = max(0, len(m.filtered)-1)
+	}
+}
+
+// ── Update ──────────────────────────────────────────────────────────────────
+
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+		return m, nil
+
+	case tea.KeyMsg:
+		if msg.String() == "ctrl+c" {
+			return m, tea.Quit
+		}
+
+	case packagesFetchedMsg:
+		m.packages = msg
+		m.state = stateSearch
+		m.filterPackages()
+		return m, m.input.Focus()
+
+	case fetchErrMsg:
+		m.err = msg.err
+		return m, tea.Quit
+
+	case spinner.TickMsg:
+		if m.state == stateLoading {
+			var cmd tea.Cmd
+			m.spinner, cmd = m.spinner.Update(msg)
+			return m, cmd
+		}
+	}
+
+	switch m.state {
+	case stateSearch:
+		return m.updateSearch(msg)
+	case stateDetail:
+		return m.updateDetail(msg)
+	}
+
+	return m, nil
+}
+
+func (m model) updateSearch(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if msg, ok := msg.(tea.KeyMsg); ok {
+		switch msg.String() {
+		case "q":
+			if m.input.Value() == "" {
+				return m, tea.Quit
+			}
+		case "up":
+			if m.cursor > 0 {
+				m.cursor--
+			}
+			return m, nil
+		case "down":
+			if m.cursor < len(m.filtered)-1 {
+				m.cursor++
+			}
+			return m, nil
+		case "enter":
+			if len(m.filtered) > 0 && m.cursor < len(m.filtered) {
+				idx := m.filtered[m.cursor].Index
+				m.selectedPkg = &m.packages[idx]
+				m.state = stateDetail
+				m.releaseCursor = 0
+				m.releaseOffset = 0
+			}
+			return m, nil
+		case "esc":
+			if m.input.Value() != "" {
+				m.input.SetValue("")
+				m.filterPackages()
+				m.cursor = 0
+				return m, nil
+			}
+			return m, nil
+		}
+	}
+
+	var cmd tea.Cmd
+	prevValue := m.input.Value()
+	m.input, cmd = m.input.Update(msg)
+	if m.input.Value() != prevValue {
+		m.filterPackages()
+		m.cursor = 0
+	}
+	return m, cmd
+}
+
+func (m model) updateDetail(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if m.selectedPkg == nil {
+		return m, nil
+	}
+
+	if msg, ok := msg.(tea.KeyMsg); ok {
+		visibleReleases := m.height - 12
+		if visibleReleases < 3 {
+			visibleReleases = 3
+		}
+
+		switch msg.String() {
+		case "q":
+			return m, tea.Quit
+		case "esc":
+			m.state = stateSearch
+			m.releaseCursor = 0
+			m.releaseOffset = 0
+			return m, nil
+		case "up", "k":
+			if m.releaseCursor > 0 {
+				m.releaseCursor--
+				if m.releaseCursor < m.releaseOffset {
+					m.releaseOffset = m.releaseCursor
+				}
+			}
+			return m, nil
+		case "down", "j":
+			if m.releaseCursor < len(m.selectedPkg.Releases)-1 {
+				m.releaseCursor++
+				if m.releaseCursor >= m.releaseOffset+visibleReleases {
+					m.releaseOffset = m.releaseCursor - visibleReleases + 1
+				}
+			}
+			return m, nil
+		case "c", "C":
+			ver := m.selectedPkg.Releases[m.releaseCursor].Version
+			_ = clipboard.WriteAll(ver)
+			m.copiedVersion = ver
+			m.copiedPkgName = m.selectedPkg.Name
+			return m, tea.Quit
+		}
+	}
+
+	return m, nil
+}
+
+// ── View ────────────────────────────────────────────────────────────────────
+
+func (m model) View() string {
+	switch m.state {
+	case stateLoading:
+		return m.viewLoading()
+	case stateSearch:
+		return m.viewSearch()
+	case stateDetail:
+		return m.viewDetail()
+	}
+	return ""
+}
+
+func (m model) viewLoading() string {
+	return fmt.Sprintf("\n  %s Fetching packages...\n", m.spinner.View())
+}
+
+func (m model) viewSearch() string {
+	var b strings.Builder
+
+	title := titleStyle.Render("  Package Version Search")
+	b.WriteString("\n" + title + "\n\n")
+
+	b.WriteString(inputStyle.Render(m.input.View()) + "\n\n")
+
+	count := fmt.Sprintf("%d packages", len(m.filtered))
+	b.WriteString("  " + subtitleStyle.Render(count) + "\n\n")
+
+	if len(m.filtered) == 0 {
+		b.WriteString("  " + nameDimStyle.Render("No matches found") + "\n")
+	} else {
+		visibleItems := m.height - 10
+		if visibleItems < 3 {
+			visibleItems = 3
+		}
+
+		offset := 0
+		if m.cursor >= visibleItems {
+			offset = m.cursor - visibleItems + 1
+		}
+		end := offset + visibleItems
+		if end > len(m.filtered) {
+			end = len(m.filtered)
+		}
+
+		for i := offset; i < end; i++ {
+			match := m.filtered[i]
+			pkg := m.packages[match.Index]
+			selected := i == m.cursor
+
+			name := renderName(pkg.Name, match.MatchedIndexes, selected)
+			nameWidth := lipgloss.Width(name)
+			pad := 24 - nameWidth
+			if pad < 1 {
+				pad = 1
+			}
+
+			version := pkg.LatestStable.Version
+			categories := strings.Join(pkg.Categories, ", ")
+
+			if selected {
+				arrow := cursorStyle.Render("▸ ")
+				ver := verAccentStyle.Render(version)
+				cat := catDimStyle.Render(categories)
+				b.WriteString(fmt.Sprintf("  %s%s%s%s  %s\n", arrow, name, strings.Repeat(" ", pad), ver, cat))
+			} else {
+				ver := verMutedStyle.Render(version)
+				b.WriteString(fmt.Sprintf("    %s%s%s\n", name, strings.Repeat(" ", pad), ver))
+			}
+		}
+
+		if len(m.filtered) > visibleItems {
+			info := scrollInfoStyle.Render(
+				fmt.Sprintf("  ── showing %d–%d of %d ──", offset+1, end, len(m.filtered)),
+			)
+			b.WriteString("\n" + info)
+		}
+	}
+
+	help := helpStyle.Render("  ↑↓ navigate • enter select • esc clear • q quit • ctrl+c quit")
+	b.WriteString("\n" + help)
+
+	return b.String()
+}
+
+func (m model) viewDetail() string {
+	if m.selectedPkg == nil {
+		return ""
+	}
+	pkg := m.selectedPkg
+	var b strings.Builder
+
+	header := headerStyle.Render(pkg.Name)
+	b.WriteString("\n" + header + "\n")
+
+	if len(pkg.Categories) > 0 {
+		cats := categoryStyle.Render("  " + strings.Join(pkg.Categories, " · "))
+		b.WriteString(cats + "\n\n")
+	}
+
+	label := latestBadge.Render("LATEST")
+	ver := lipgloss.NewStyle().Foreground(accentColor).Bold(true).Render(pkg.LatestStable.Version)
+	date := dateStyle.Render(pkg.LatestStable.Date)
+	b.WriteString(fmt.Sprintf("  %s  %s  %s\n\n", label, ver, date))
+
+	relHeader := subtitleStyle.Bold(true).Render("  Releases")
+	b.WriteString(relHeader + "\n")
+	b.WriteString("  " + dividerStyle.Render(strings.Repeat("─", 52)) + "\n")
+
+	visibleReleases := m.height - 12
+	if visibleReleases < 3 {
+		visibleReleases = 3
+	}
+
+	end := m.releaseOffset + visibleReleases
+	if end > len(pkg.Releases) {
+		end = len(pkg.Releases)
+	}
+
+	for i := m.releaseOffset; i < end; i++ {
+		rel := pkg.Releases[i]
+		selected := i == m.releaseCursor
+
+		if selected {
+			arrow := cursorStyle.Render("▸ ")
+			v := relVerSelectedStyl.Render(fmt.Sprintf("%-28s", rel.Version))
+			d := relDateSelStyle.Render(rel.Date)
+			line := fmt.Sprintf("  %s%s  %s", arrow, v, d)
+			if rel.Prerelease {
+				line += "  " + prereleaseBadge.Render("pre")
+			}
+			b.WriteString(line + "\n")
+		} else {
+			v := relVerDimStyle.Render(fmt.Sprintf("%-28s", rel.Version))
+			d := dateStyle.Render(rel.Date)
+			line := fmt.Sprintf("    %s  %s", v, d)
+			if rel.Prerelease {
+				line += "  " + prerelDimStyle.Render("pre")
+			}
+			b.WriteString(line + "\n")
+		}
+	}
+
+	if len(pkg.Releases) > visibleReleases {
+		pct := float64(m.releaseCursor) / float64(max(1, len(pkg.Releases)-1)) * 100
+		info := scrollInfoStyle.Render(
+			fmt.Sprintf("  ── %d/%d (%.0f%%) ──", m.releaseCursor+1, len(pkg.Releases), pct),
+		)
+		b.WriteString("\n" + info)
+	}
+
+	help := helpStyle.Render("  ↑↓/jk scroll • C copy version • esc back • q quit")
+	b.WriteString("\n" + help)
+
+	return b.String()
+}
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+func renderName(name string, matchedIndexes []int, selected bool) string {
+	if len(matchedIndexes) == 0 {
+		if selected {
+			return nameSelectedStyle.Render(name)
+		}
+		return nameDimStyle.Render(name)
+	}
+
+	matchSet := make(map[int]bool, len(matchedIndexes))
+	for _, idx := range matchedIndexes {
+		matchSet[idx] = true
+	}
+
+	var result strings.Builder
+	for i, ch := range name {
+		s := string(ch)
+		if matchSet[i] {
+			if selected {
+				result.WriteString(matchHighlightSel.Render(s))
+			} else {
+				result.WriteString(matchHighlight.Render(s))
+			}
+		} else {
+			if selected {
+				result.WriteString(nameSelectedStyle.Render(s))
+			} else {
+				result.WriteString(nameDimStyle.Render(s))
+			}
+		}
+	}
+	return result.String()
+}
+
+// ── Main ────────────────────────────────────────────────────────────────────
+
+func main() {
+	p := tea.NewProgram(initialModel(), tea.WithAltScreen())
+	finalModel, err := p.Run()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	if fm, ok := finalModel.(model); ok {
+		if fm.err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", fm.err)
+			os.Exit(1)
+		}
+		if fm.copiedVersion != "" {
+			fmt.Println(copiedStyle.Render(
+				fmt.Sprintf("\n  ✓ Copied \"%s\" to clipboard (for %s)\n", fm.copiedVersion, fm.copiedPkgName),
+			))
+		}
+	}
+}
