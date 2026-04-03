@@ -7,3 +7,5 @@ export async function GET() {
 	const packages = await fetchAllPackages(configs);
 	return json(packages);
 }
+
+export const prerender = true
