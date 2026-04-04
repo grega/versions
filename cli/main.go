@@ -12,6 +12,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/muesli/termenv"
 	"github.com/sahilm/fuzzy"
 )
 
@@ -363,7 +364,9 @@ func (m model) updateDetail(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		case "c", "C":
 			ver := m.detailReleases[m.releaseCursor].Version
-			_ = clipboard.WriteAll(ver)
+			if err := clipboard.WriteAll(ver); err != nil {
+					termenv.Copy(ver)
+				}
 			m.copiedVersion = ver
 			m.copiedPkgName = m.selectedPkg.Name
 			return m, tea.Quit
