@@ -1,8 +1,10 @@
 # Versions
 
-A dashboard that shows the version information for a selection of languages, tools, and libraries in one place.
+A dashboard that shows the version information for an opinionated selection of languages, tools, and libraries in one place.
 
 https://versions.gregdev.com
+
+Feel free to suggest further packages to add via a PR or issue. However, this is meant to be a curated list of popular, general-purpose (mostly higher-level) web-focused tools, with a bias towards my own needs and interests, so I may not accept all suggestions 🙂
 
 ## CLI
 
