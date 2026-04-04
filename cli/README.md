@@ -1,8 +1,8 @@
 # vrs
 
-A terminal UI for browsing package versions, powered by [Bubble Tea](https://github.com/charmbracelet/bubbletea) and [Bubbles](https://github.com/charmbracelet/bubbles).
+A terminal UI for browsing package versions, powered by [Bubble Tea](https://github.com/charmbracelet/bubbletea).
 
-Fetches data from [versions.gregdev.com](https://versions.gregdev.com) and lets you fuzzy-search packages, browse their releases, and copy a version number to your clipboard.
+Fetches data from the Versions "API" (https://versions.gregdev.com/api/packages), and allows for fuzzy-searching of packages, browsing their releases, and copying a version number to the clipboard.
 
 ## Install
 
@@ -40,7 +40,7 @@ To force a fresh fetch, just delete the cache file.
 
 ### Go (via asdf)
 
-This project uses Go 1.26. The required version is pinned in `.tool-versions`.
+The required version is pinned in `.tool-versions`.
 
 ```sh
 asdf plugin add golang
