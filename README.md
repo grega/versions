@@ -4,6 +4,10 @@ A dashboard that shows the version information for a selection of languages, too
 
 https://versions.gregdev.com
 
+## CLI
+
+A terminal UI for browsing and searching package versions is available in [`cli/`](cli/). Install via Homebrew (`brew install grega/tap/versions`) or see the [CLI README](cli/README.md) for details.
+
 ## Prerequisites
 
 Use [asdf](https://asdf-vm.com/) to install Node.js:

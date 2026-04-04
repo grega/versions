@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+# release - tag, build, create GitHub release, and print Homebrew tap info
+#
+# Usage:
+#   ./release patch     (0.1.0 → 0.1.1)
+#   ./release minor     (0.1.0 → 0.2.0)
+#   ./release major     (0.1.0 → 1.0.0)
+#   ./release 1.2.3     (explicit version)
+
+set -euo pipefail
+
+REPO="grega/versions"
+BINARY_NAME="versions"
+CLI_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# ── Read current version from latest git tag ────────────────────────────────
+
+current=$(git tag -l 'v*' | sed 's/^v//' | sort -V | tail -1)
+current="${current:-0.0.0}"
+
+# ── Resolve new version ─────────────────────────────────────────────────────
+
+if [[ -z "${1:-}" ]]; then
+  echo "Usage: ./release <version|patch|minor|major>" >&2
+  echo "Current version: $current" >&2
+  exit 1
+fi
+
+IFS='.' read -r major minor patch <<< "$current"
+
+case "$1" in
+  patch) new="$major.$minor.$((patch + 1))" ;;
+  minor) new="$major.$((minor + 1)).0" ;;
+  major) new="$((major + 1)).0.0" ;;
+  *)     new="$1" ;;
+esac
+
+tag="v$new"
+
+# ── Safety checks ───────────────────────────────────────────────────────────
+
+if [[ "$new" == "$current" ]]; then
+  echo "Error: version is already $current" >&2
+  exit 1
+fi
+
+if git tag -l "$tag" | grep -q .; then
+  echo "Error: tag $tag already exists" >&2
+  exit 1
+fi
+
+if [[ -n "$(git status --porcelain)" ]]; then
+  echo "Error: working tree is not clean — commit or stash first" >&2
+  exit 1
+fi
+
+echo "Releasing: $current → $new ($tag)"
+
+# ── Build all targets ──────────────────────────────────────────────────────
+
+TARGETS=(
+  "darwin  arm64"
+  "darwin  amd64"
+  "linux   arm64"
+  "linux   amd64"
+)
+
+assets=()
+
+for target in "${TARGETS[@]}"; do
+  read -r os arch <<< "$target"
+  echo "Building $os/$arch..."
+  outname="$BINARY_NAME-$tag-$os-$arch"
+  CGO_ENABLED=0 GOOS="$os" GOARCH="$arch" \
+    go build -C "$CLI_DIR" -ldflags "-s -w" -o "$BINARY_NAME" .
+  tar -czf "/tmp/$outname.tar.gz" -C "$CLI_DIR" "$BINARY_NAME"
+  rm "$CLI_DIR/$BINARY_NAME"
+  assets+=("/tmp/$outname.tar.gz")
+done
+
+# ── Tag and push ────────────────────────────────────────────────────────────
+
+git tag "$tag"
+git push origin HEAD --tags
+
+# ── Create GitHub release with assets ───────────────────────────────────────
+
+gh release create "$tag" "${assets[@]}" \
+  --repo "$REPO" \
+  --title "$tag" \
+  --generate-notes
+
+# ── Print Homebrew tap info ─────────────────────────────────────────────────
+
+echo ""
+echo "Done! Homebrew tap info:"
+echo ""
+
+for asset in "${assets[@]}"; do
+  filename=$(basename "$asset")
+  url="https://github.com/$REPO/releases/download/$tag/$filename"
+  sha=$(shasum -a 256 "$asset" | awk '{print $1}')
+  echo "  $filename"
+  echo "  url:    $url"
+  echo "  sha256: $sha"
+  echo ""
+done
+
+rm -f "${assets[@]}"
