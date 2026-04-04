@@ -4,9 +4,12 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/bubbles/spinner"
@@ -18,8 +21,66 @@ import (
 )
 
 const apiURL = "https://versions.gregdev.com/api/packages"
+const cacheTTL = 1 * time.Hour
 
 var version = "dev"
+
+type cachedResponse struct {
+	FetchedAt time.Time `json:"fetchedAt"`
+	Packages  []Package `json:"packages"`
+}
+
+func cacheFilePath() string {
+	dir, err := os.UserCacheDir()
+	if err != nil {
+		return ""
+	}
+	return filepath.Join(dir, "vrs", "packages.json")
+}
+
+func loadCache(path string) []Package {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil
+	}
+	var cached cachedResponse
+	if err := json.Unmarshal(data, &cached); err != nil {
+		return nil
+	}
+	if time.Since(cached.FetchedAt) > cacheTTL {
+		return nil
+	}
+	return cached.Packages
+}
+
+func writeCache(path string, packages []Package) {
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return
+	}
+	data, err := json.Marshal(cachedResponse{
+		FetchedAt: time.Now(),
+		Packages:  packages,
+	})
+	if err != nil {
+		return
+	}
+	tmp, err := os.CreateTemp(dir, "packages-*.json.tmp")
+	if err != nil {
+		return
+	}
+	tmpPath := tmp.Name()
+	if _, err := tmp.Write(data); err != nil {
+		tmp.Close()
+		os.Remove(tmpPath)
+		return
+	}
+	if err := tmp.Close(); err != nil {
+		os.Remove(tmpPath)
+		return
+	}
+	os.Rename(tmpPath, path)
+}
 
 // ── Styles ──────────────────────────────────────────────────────────────────
 
@@ -208,16 +269,32 @@ func (m model) Init() tea.Cmd {
 // ── Commands ────────────────────────────────────────────────────────────────
 
 func fetchPackages() tea.Msg {
+	if path := cacheFilePath(); path != "" {
+		if packages := loadCache(path); packages != nil {
+			return packagesFetchedMsg(packages)
+		}
+	}
+
 	resp, err := http.Get(apiURL)
 	if err != nil {
 		return fetchErrMsg{err}
 	}
 	defer resp.Body.Close()
 
-	var packages []Package
-	if err := json.NewDecoder(resp.Body).Decode(&packages); err != nil {
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
 		return fetchErrMsg{err}
 	}
+
+	var packages []Package
+	if err := json.Unmarshal(body, &packages); err != nil {
+		return fetchErrMsg{err}
+	}
+
+	if path := cacheFilePath(); path != "" {
+		writeCache(path, packages)
+	}
+
 	return packagesFetchedMsg(packages)
 }
 

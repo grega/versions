@@ -47,6 +47,15 @@ go build -o vrs .
 | `Esc` | Clear search / go back / quit |
 | `Ctrl+C` | Quit |
 
+## Caching
+
+API responses are cached locally for 1 hour (the backend only refreshes every ~6 hours). The cache file lives at:
+
+- **macOS:** `~/Library/Caches/vrs/packages.json`
+- **Linux:** `~/.cache/vrs/packages.json`
+
+To force a fresh fetch, just delete the cache file.
+
 ## Install (Homebrew)
 
 ```sh
@@ -72,8 +81,3 @@ This will:
 4. Tag and push
 5. Create a GitHub release with all tarballs attached (`gh` CLI required)
 6. Print the URL and SHA-256 for each asset — use these to update the [Homebrew tap formula](https://github.com/grega/homebrew-tap)
-
-## Notes
-
-- **Clipboard** uses native system clipboard (`pbcopy`/`xclip`/`xsel`) with OSC 52 as a fallback for SSH and minimal environments. On Linux, you may need `xclip` or `xsel` installed (`sudo apt install xclip`)
-- The app runs in alternate screen mode, meaning terminal history is preserved
