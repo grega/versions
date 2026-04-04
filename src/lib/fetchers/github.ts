@@ -28,7 +28,7 @@ function cleanVersion(tag: string, tagReplace?: Record<string, string>): string 
 	return version.replace(/^v/, '').replaceAll('_', '.');
 }
 
-const TARGET_COUNT = 15;
+const TARGET_COUNT = 20;
 const MAX_PAGES = 3;
 
 async function fetchReleases(
@@ -80,7 +80,7 @@ async function fetchTags(
 
 	const regex = new RegExp(tagPattern);
 	const filtered = data.filter((t: Record<string, unknown>) => regex.test(String(t.name)));
-	const tags = filtered.slice(0, 15);
+	const tags = filtered.slice(0, TARGET_COUNT);
 
 	const dates = await Promise.all(
 		tags.map(async (t: Record<string, unknown>) => {

@@ -16,7 +16,7 @@ export async function fetchEndOfLife(config: PackageConfig): Promise<PackageInfo
 	if (!res.ok) throw new Error(`endoflife.date API returned ${res.status}`);
 	const data: EolCycle[] = await res.json();
 
-	const releases: Release[] = data.slice(0, 15).map((cycle) => ({
+	const releases: Release[] = data.slice(0, 20).map((cycle) => ({
 		version: cycle.latest || cycle.cycle,
 		date: cycle.latestReleaseDate || cycle.releaseDate,
 		prerelease: false,

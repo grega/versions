@@ -17,7 +17,7 @@ export async function fetchPyPI(config: PackageConfig): Promise<PackageInfo> {
 			// Same date: prefer higher version number
 			return b.localeCompare(a, undefined, { numeric: true });
 		})
-		.slice(0, 15);
+		.slice(0, 20);
 
 	const releases: Release[] = versions.map((v) => {
 		const files = releasesObj[v];

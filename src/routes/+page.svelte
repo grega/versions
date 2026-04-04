@@ -13,6 +13,9 @@
 		return value === 'system' || value === 'light' || value === 'dark';
 	}
 
+	// Max releases to display per package on the website (API returns more)
+	const MAX_DISPLAY_RELEASES = 15;
+
 	let { data } = $props();
 	let search = $state('');
 	let activeCategory = $state('All');
@@ -316,7 +319,7 @@
 							<div class="releases">
 								<table>
 									<tbody>
-										{#each pkg.releases as release}
+										{#each pkg.releases.slice(0, MAX_DISPLAY_RELEASES) as release}
 											<tr>
 												<td>
 													{#if release.url}

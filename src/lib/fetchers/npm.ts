@@ -22,7 +22,7 @@ export async function fetchNpm(config: PackageConfig): Promise<PackageInfo> {
 			if (dateCmp !== 0) return dateCmp;
 			return b.localeCompare(a, undefined, { numeric: true });
 		})
-		.slice(0, 15);
+		.slice(0, 20);
 
 	// Ensure dist-tags.latest is always included
 	if (latestVersion && !allVersions.includes(latestVersion)) {

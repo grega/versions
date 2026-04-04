@@ -8,7 +8,7 @@ export async function fetchRubyGems(config: PackageConfig): Promise<PackageInfo>
 
 	const data = await versionsRes.json();
 
-	const releases: Release[] = data.slice(0, 15).map((v: Record<string, unknown>) => ({
+	const releases: Release[] = data.slice(0, 20).map((v: Record<string, unknown>) => ({
 		version: String(v.number),
 		date: String(v.created_at).split('T')[0],
 		prerelease: Boolean(v.prerelease),

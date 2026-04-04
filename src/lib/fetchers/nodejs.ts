@@ -12,7 +12,7 @@ export async function fetchNodejs(config: PackageConfig): Promise<PackageInfo> {
 	if (!res.ok) throw new Error(`Node.js dist API returned ${res.status}`);
 	const data: NodeRelease[] = await res.json();
 
-	const releases: Release[] = data.slice(0, 15).map((r) => ({
+	const releases: Release[] = data.slice(0, 20).map((r) => ({
 		version: r.version.replace(/^v/, ''),
 		date: r.date,
 		prerelease: false,
