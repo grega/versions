@@ -6,7 +6,7 @@ https://versions.gregdev.com
 
 ## CLI
 
-A terminal UI for browsing and searching package versions is available in [`cli/`](cli/). Install via Homebrew (`brew install grega/tap/versions`) or see the [CLI README](cli/README.md) for details.
+A terminal UI for browsing and searching package versions is available in [`cli/`](cli/). Install via Homebrew (`brew install grega/tap/vrs`) or see the [CLI README](cli/README.md) for details.
 
 ## Prerequisites
 

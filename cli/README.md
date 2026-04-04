@@ -1,4 +1,4 @@
-# versions
+# vrs
 
 A terminal UI for browsing package versions, powered by [Bubble Tea](https://github.com/charmbracelet/bubbletea) and [Bubbles](https://github.com/charmbracelet/bubbles).
 
@@ -32,8 +32,8 @@ go run .
 ## Build
 
 ```sh
-go build -o versions .
-./versions
+go build -o vrs .
+./vrs
 ```
 
 ## Usage
@@ -50,7 +50,7 @@ go build -o versions .
 ## Install (Homebrew)
 
 ```sh
-brew install grega/tap/versions
+brew install grega/tap/vrs
 ```
 
 ## Releasing
@@ -75,5 +75,5 @@ This will:
 
 ## Notes
 
-- **Clipboard support** relies on [atotto/clipboard](https://github.com/atotto/clipboard). On Linux, you may need `xclip` or `xsel` installed (`sudo apt install xclip`). macOS and Windows work out of the box
+- **Clipboard** uses native system clipboard (`pbcopy`/`xclip`/`xsel`) with OSC 52 as a fallback for SSH and minimal environments. On Linux, you may need `xclip` or `xsel` installed (`sudo apt install xclip`)
 - The app runs in alternate screen mode, meaning terminal history is preserved

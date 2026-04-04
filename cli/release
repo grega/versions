@@ -10,7 +10,7 @@
 set -euo pipefail
 
 REPO="grega/versions"
-BINARY_NAME="versions"
+BINARY_NAME="vrs"
 CLI_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # ── Read current version from latest git tag ────────────────────────────────
