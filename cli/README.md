@@ -4,37 +4,17 @@ A terminal UI for browsing package versions, powered by [Bubble Tea](https://git
 
 Fetches data from [versions.gregdev.com](https://versions.gregdev.com) and lets you fuzzy-search packages, browse their releases, and copy a version number to your clipboard.
 
-## Prerequisites
-
-### Go (via asdf)
-
-This project uses Go 1.26. The required version is pinned in `.tool-versions`.
+## Install
 
 ```sh
-asdf plugin add golang
-asdf install
+brew install grega/tap/vrs
 ```
 
-This will install the correct Go version automatically.
+## Demo
 
-## Install Dependencies
-
-```sh
-go mod download
-```
-
-## Run
-
-```sh
-go run .
-```
-
-## Build
-
-```sh
-go build -o vrs .
-./vrs
-```
+<picture>
+  <img alt="Animated demo showing vrs in action" src="./demo.gif">
+</picture>
 
 ## Usage
 
@@ -56,13 +36,51 @@ API responses are cached locally for 1 hour (the backend only refreshes every ~6
 
 To force a fresh fetch, just delete the cache file.
 
-## Install (Homebrew)
+## Development
+
+### Go (via asdf)
+
+This project uses Go 1.26. The required version is pinned in `.tool-versions`.
 
 ```sh
-brew install grega/tap/vrs
+asdf plugin add golang
+asdf install
 ```
 
-## Releasing
+This will install the correct Go version automatically.
+
+### Install Dependencies
+
+```sh
+go mod download
+```
+
+### Run
+
+```sh
+go run .
+```
+
+### Build
+
+```sh
+go build -o vrs .
+./vrs
+```
+
+### Generating a new demo GIF
+
+Requires [VHS](https://github.com/charmbracelet/vhs). Build the binary, then run the tape:
+
+```sh
+brew install vhs
+go build -o vrs .
+vhs demo.tape
+```
+
+This outputs `demo.gif`.
+
+### Releasing
 
 The `release` script handles tagging, cross-compilation, and GitHub release creation:
 
