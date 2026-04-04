@@ -1,5 +1,5 @@
 import { env } from '$env/dynamic/private';
-import type { PackageConfig, PackageInfo, Release } from '../types.js';
+import { highestVersion, type PackageConfig, type PackageInfo, type Release } from '../types.js';
 
 function headers(auth = true): Record<string, string> {
 	const h: Record<string, string> = { Accept: 'application/vnd.github+json' };
@@ -125,8 +125,8 @@ export async function fetchGitHub(config: PackageConfig): Promise<PackageInfo> {
 		name: config.name,
 		categories: config.categories,
 		sourceUrl: config.url,
-		latest: releases[0] ?? null,
-		latestStable: stableReleases[0] ?? null,
+		latest: highestVersion(releases),
+		latestStable: highestVersion(stableReleases),
 		releases,
 		fetchedAt: new Date().toISOString()
 	};

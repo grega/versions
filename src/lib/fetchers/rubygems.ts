@@ -1,18 +1,12 @@
-import type { PackageConfig, PackageInfo, Release } from '../types.js';
+import { highestVersion, type PackageConfig, type PackageInfo, type Release } from '../types.js';
 
 export async function fetchRubyGems(config: PackageConfig): Promise<PackageInfo> {
 	const gem = config.gem ?? config.name.toLowerCase();
 
-	const [versionsRes, gemRes] = await Promise.all([
-		fetch(`https://rubygems.org/api/v1/versions/${gem}.json`),
-		fetch(`https://rubygems.org/api/v1/gems/${gem}.json`)
-	]);
+	const versionsRes = await fetch(`https://rubygems.org/api/v1/versions/${gem}.json`);
 	if (!versionsRes.ok) throw new Error(`RubyGems API returned ${versionsRes.status}`);
-	if (!gemRes.ok) throw new Error(`RubyGems API returned ${gemRes.status}`);
 
 	const data = await versionsRes.json();
-	const gemData = await gemRes.json();
-	const latestVersion = gemData.version ?? '';
 
 	const releases: Release[] = data.slice(0, 15).map((v: Record<string, unknown>) => ({
 		version: String(v.number),
@@ -22,16 +16,14 @@ export async function fetchRubyGems(config: PackageConfig): Promise<PackageInfo>
 		url: `https://rubygems.org/gems/${gem}/versions/${v.number}`
 	}));
 
-	const latestStable = releases.find((r) => r.version === latestVersion)
-		?? releases.find((r) => !r.prerelease)
-		?? null;
+	const stableReleases = releases.filter((r) => !r.prerelease);
 
 	return {
 		name: config.name,
 		categories: config.categories,
 		sourceUrl: config.url,
-		latest: releases[0] ?? null,
-		latestStable,
+		latest: highestVersion(releases),
+		latestStable: highestVersion(stableReleases),
 		releases,
 		fetchedAt: new Date().toISOString()
 	};

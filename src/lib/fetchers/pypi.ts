@@ -1,4 +1,4 @@
-import type { PackageConfig, PackageInfo, Release } from '../types.js';
+import { highestVersion, type PackageConfig, type PackageInfo, type Release } from '../types.js';
 
 export async function fetchPyPI(config: PackageConfig): Promise<PackageInfo> {
 	const pkg = config.package ?? config.name.toLowerCase();
@@ -7,7 +7,6 @@ export async function fetchPyPI(config: PackageConfig): Promise<PackageInfo> {
 	if (!res.ok) throw new Error(`PyPI API returned ${res.status}`);
 	const data = await res.json();
 
-	const latestVersion = data.info?.version ?? '';
 	const releasesObj = data.releases ?? {};
 	const versions = Object.keys(releasesObj)
 		.filter((v) => releasesObj[v].length > 0)
@@ -33,17 +32,14 @@ export async function fetchPyPI(config: PackageConfig): Promise<PackageInfo> {
 		};
 	});
 
-	// Use PyPI's declared latest version rather than relying on sort order
-	const latestStable = releases.find((r) => r.version === latestVersion)
-		?? releases.find((r) => !r.prerelease)
-		?? null;
+	const stableReleases = releases.filter((r) => !r.prerelease);
 
 	return {
 		name: config.name,
 		categories: config.categories,
 		sourceUrl: config.url,
-		latest: releases[0] ?? null,
-		latestStable,
+		latest: highestVersion(releases),
+		latestStable: highestVersion(stableReleases),
 		releases,
 		fetchedAt: new Date().toISOString()
 	};

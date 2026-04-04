@@ -46,6 +46,24 @@ describe('fetchRubyGems', () => {
 		expect(result.releases[0].url).toBe('https://rubygems.org/gems/rails/versions/8.1.2');
 	});
 
+	it('picks highest version as latest, not most recent by date', async () => {
+		const multiBranch = [
+			{ number: '7.2.5', created_at: '2026-03-27T12:00:00Z', prerelease: false },
+			{ number: '8.0.3', created_at: '2026-03-16T12:00:00Z', prerelease: false },
+			{ number: '7.1.9', created_at: '2026-03-15T12:00:00Z', prerelease: false }
+		];
+		vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+			new Response(JSON.stringify(multiBranch), { status: 200 })
+		);
+
+		const result = await fetchRubyGems(config);
+
+		expect(result.latest?.version).toBe('8.0.3');
+		expect(result.latestStable?.version).toBe('8.0.3');
+		// releases list preserves API order (date-sorted)
+		expect(result.releases[0].version).toBe('7.2.5');
+	});
+
 	it('returns error on API failure', async () => {
 		vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
 			new Response('', { status: 404 })

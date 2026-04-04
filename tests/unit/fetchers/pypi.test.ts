@@ -50,6 +50,26 @@ describe('fetchPyPI', () => {
 		expect(result.latestStable?.version).toBe('4.2.0');
 	});
 
+	it('picks highest version as latest, not most recent by date', async () => {
+		const multiBranch = {
+			releases: {
+				'4.2.8': [{ upload_time: '2026-03-27T12:00:00' }],
+				'5.1.2': [{ upload_time: '2026-03-16T12:00:00' }],
+				'5.0.9': [{ upload_time: '2026-03-10T12:00:00' }]
+			}
+		};
+		vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+			new Response(JSON.stringify(multiBranch), { status: 200 })
+		);
+
+		const result = await fetchPyPI(config);
+
+		expect(result.latest?.version).toBe('5.1.2');
+		expect(result.latestStable?.version).toBe('5.1.2');
+		// releases list preserves date order
+		expect(result.releases[0].version).toBe('4.2.8');
+	});
+
 	it('returns error on API failure', async () => {
 		vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
 			new Response('', { status: 404 })

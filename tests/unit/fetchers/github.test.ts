@@ -34,10 +34,10 @@ describe('fetchGitHub', () => {
 		expect(result.error).toBeUndefined();
 		expect(result.releases).toHaveLength(4);
 
-		// Latest is first in list (v2.0.1, stable)
-		expect(result.latest?.version).toBe('2.0.1');
-		expect(result.latest?.prerelease).toBe(false);
-		expect(result.latest?.date).toBe('2026-03-01');
+		// Latest is highest version (v2.1.0-beta1, prerelease)
+		expect(result.latest?.version).toBe('2.1.0-beta1');
+		expect(result.latest?.prerelease).toBe(true);
+		expect(result.latest?.date).toBe('2026-03-10');
 
 		// Latest stable skips the prerelease
 		expect(result.latestStable?.version).toBe('2.0.1');
@@ -242,7 +242,46 @@ describe('fetchGitHub', () => {
 		const secondCall = vi.mocked(fetch).mock.calls[1];
 		const secondHeaders = (secondCall[1]?.headers as Record<string, string>) ?? {};
 		expect(secondHeaders['Authorization']).toBeUndefined();
-		expect(result.latest?.version).toBe('2.0.1');
+		expect(result.latest?.version).toBe('2.1.0-beta1');
+	});
+
+	it('picks highest version as latest, not most recent by date', async () => {
+		const rubyLikeReleases = [
+			{
+				tag_name: 'v3.2.11',
+				published_at: '2026-03-27T12:00:00Z',
+				prerelease: false,
+				html_url: 'https://github.com/ruby/ruby/releases/tag/v3.2.11'
+			},
+			{
+				tag_name: 'v3.3.11',
+				published_at: '2026-03-26T12:00:00Z',
+				prerelease: false,
+				html_url: 'https://github.com/ruby/ruby/releases/tag/v3.3.11'
+			},
+			{
+				tag_name: 'v4.0.2',
+				published_at: '2026-03-16T12:00:00Z',
+				prerelease: false,
+				html_url: 'https://github.com/ruby/ruby/releases/tag/v4.0.2'
+			},
+			{
+				tag_name: 'v3.4.9',
+				published_at: '2026-03-11T12:00:00Z',
+				prerelease: false,
+				html_url: 'https://github.com/ruby/ruby/releases/tag/v3.4.9'
+			}
+		];
+		vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+			new Response(JSON.stringify(rubyLikeReleases), { status: 200 })
+		);
+
+		const result = await fetchGitHub({ ...baseConfig, repo: 'ruby/ruby' });
+
+		expect(result.latest?.version).toBe('4.0.2');
+		expect(result.latestStable?.version).toBe('4.0.2');
+		// releases list preserves date order from GitHub
+		expect(result.releases[0].version).toBe('3.2.11');
 	});
 
 	it('throws when both auth and no-auth requests fail', async () => {
