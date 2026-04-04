@@ -205,7 +205,7 @@
 	<header>
 		<div class="header-top">
 			<h1><a href="/">Versions</a></h1>
-			<p class="tagline">Release information for a selection of languages, frameworks, and tools</p>
+			<p class="tagline">Release information for an (opinionated) selection of languages, frameworks, and tools</p>
 			<div class="header-meta">
 				<span class="built-at">
 					<button
@@ -218,8 +218,9 @@
 						{@render themeIcon(themePreference)}
 						<span class="theme-value">{themeLabel(themePreference)}</span>
 					</button>
-					Updated <time datetime={data.builtAt}>{timeSince(data.builtAt)} &middot; {new Date(data.builtAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</time>
-					&middot; <a href="https://github.com/grega/versions" target="_blank" rel="noopener" class="github-link">GitHub</a>
+					Updated <time datetime={data.builtAt}>{new Date(data.builtAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</time>
+					&middot; <a href="https://github.com/grega/versions/tree/main/cli" rel="noopener" class="cli-link">CLI</a>
+					&middot; <a href="https://github.com/grega/versions" rel="noopener" class="github-link">GitHub</a>
 				</span>
 			</div>
 		</div>
@@ -312,7 +313,7 @@
 							<button class="expand-btn" onclick={() => toggleExpand(pkg.name)}>
 								{expanded[pkg.name] ? '▼ Hide releases' : '▶ Show releases'}
 							</button>
-							<a href={pkg.sourceUrl} target="_blank" rel="noopener" class="source-link">Source ↗</a>
+							<a href={pkg.sourceUrl} rel="noopener" class="source-link">Source ↗</a>
 						</div>
 
 						{#if expanded[pkg.name]}
@@ -323,7 +324,7 @@
 											<tr>
 												<td>
 													{#if release.url}
-														<a href={release.url} target="_blank" rel="noopener">{release.version}</a>
+														<a href={release.url} rel="noopener">{release.version}</a>
 													{:else}
 														{release.version}
 													{/if}
@@ -518,6 +519,7 @@
 	.source-link:focus-visible,
 	.copy-btn:focus-visible,
 	.releases a:focus-visible,
+	.cli-link:focus-visible,
 	.github-link:focus-visible,
 	h1 a:focus-visible {
 		outline: 2px solid var(--accent);
@@ -563,12 +565,12 @@
 		font-size: 0.8rem;
 	}
 
-	.github-link {
+	.cli-link, .github-link {
 		color: var(--muted-soft);
 		text-decoration: underline;
 	}
 
-	.github-link:hover {
+	.cli-link:hover, .github-link:hover {
 		color: var(--text);
 	}
 
