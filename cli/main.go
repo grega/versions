@@ -20,13 +20,13 @@ const apiURL = "https://versions.gregdev.com/api/packages"
 // ── Styles ──────────────────────────────────────────────────────────────────
 
 var (
-	primaryColor   = lipgloss.Color("#7C3AED")
-	secondaryColor = lipgloss.Color("#A78BFA")
-	accentColor    = lipgloss.Color("#34D399")
-	warningColor   = lipgloss.Color("#FBBF24")
-	mutedColor     = lipgloss.Color("#6B7280")
-	textColor      = lipgloss.Color("#F9FAFB")
-	dimColor       = lipgloss.Color("#9CA3AF")
+	primaryColor   = lipgloss.AdaptiveColor{Light: "#6D28D9", Dark: "#7C3AED"}
+	secondaryColor = lipgloss.AdaptiveColor{Light: "#7C3AED", Dark: "#A78BFA"}
+	accentColor    = lipgloss.AdaptiveColor{Light: "#059669", Dark: "#34D399"}
+	warningColor   = lipgloss.AdaptiveColor{Light: "#D97706", Dark: "#FBBF24"}
+	mutedColor     = lipgloss.AdaptiveColor{Light: "#6B7280", Dark: "#6B7280"}
+	textColor      = lipgloss.AdaptiveColor{Light: "#1F2937", Dark: "#F9FAFB"}
+	dimColor       = lipgloss.AdaptiveColor{Light: "#6B7280", Dark: "#9CA3AF"}
 
 	titleStyle = lipgloss.NewStyle().
 			Bold(true).
@@ -40,6 +40,7 @@ var (
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(primaryColor).
 			Padding(0, 1).
+			Width(42).
 			MarginLeft(2)
 
 	latestBadge = lipgloss.NewStyle().
@@ -86,6 +87,7 @@ var (
 	relVerDimStyle     = lipgloss.NewStyle().Foreground(dimColor)
 	relDateSelStyle    = lipgloss.NewStyle().Foreground(secondaryColor)
 	prerelDimStyle     = lipgloss.NewStyle().Foreground(warningColor)
+	latestDimBadge     = lipgloss.NewStyle().Foreground(accentColor).Bold(true)
 	dividerStyle       = lipgloss.NewStyle().Foreground(mutedColor)
 	scrollInfoStyle    = lipgloss.NewStyle().Foreground(mutedColor)
 	copiedStyle        = lipgloss.NewStyle().Foreground(accentColor).Bold(true)
@@ -164,9 +166,10 @@ type model struct {
 	cursor   int
 	err      error
 
-	selectedPkg   *Package
-	releaseCursor int
-	releaseOffset int
+	selectedPkg    *Package
+	detailReleases []Release
+	releaseCursor  int
+	releaseOffset  int
 	copiedVersion string
 	copiedPkgName string
 
@@ -276,10 +279,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) updateSearch(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if msg, ok := msg.(tea.KeyMsg); ok {
 		switch msg.String() {
-		case "q":
-			if m.input.Value() == "" {
-				return m, tea.Quit
-			}
 		case "up":
 			if m.cursor > 0 {
 				m.cursor--
@@ -293,10 +292,19 @@ func (m model) updateSearch(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			if len(m.filtered) > 0 && m.cursor < len(m.filtered) {
 				idx := m.filtered[m.cursor].Index
-				m.selectedPkg = &m.packages[idx]
+				pkg := &m.packages[idx]
+				m.selectedPkg = pkg
 				m.state = stateDetail
 				m.releaseCursor = 0
 				m.releaseOffset = 0
+				// Pin latest stable at top, then remaining releases in original order
+				m.detailReleases = make([]Release, 0, len(pkg.Releases))
+				m.detailReleases = append(m.detailReleases, pkg.LatestStable)
+				for _, r := range pkg.Releases {
+					if r.Version != pkg.LatestStable.Version {
+						m.detailReleases = append(m.detailReleases, r)
+					}
+				}
 			}
 			return m, nil
 		case "esc":
@@ -332,8 +340,6 @@ func (m model) updateDetail(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		switch msg.String() {
-		case "q":
-			return m, tea.Quit
 		case "esc":
 			m.state = stateSearch
 			m.releaseCursor = 0
@@ -348,7 +354,7 @@ func (m model) updateDetail(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		case "down", "j":
-			if m.releaseCursor < len(m.selectedPkg.Releases)-1 {
+			if m.releaseCursor < len(m.detailReleases)-1 {
 				m.releaseCursor++
 				if m.releaseCursor >= m.releaseOffset+visibleReleases {
 					m.releaseOffset = m.releaseCursor - visibleReleases + 1
@@ -356,7 +362,7 @@ func (m model) updateDetail(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		case "c", "C":
-			ver := m.selectedPkg.Releases[m.releaseCursor].Version
+			ver := m.detailReleases[m.releaseCursor].Version
 			_ = clipboard.WriteAll(ver)
 			m.copiedVersion = ver
 			m.copiedPkgName = m.selectedPkg.Name
@@ -387,9 +393,6 @@ func (m model) viewLoading() string {
 
 func (m model) viewSearch() string {
 	var b strings.Builder
-
-	title := titleStyle.Render("  Package Version Search")
-	b.WriteString("\n" + title + "\n\n")
 
 	b.WriteString(inputStyle.Render(m.input.View()) + "\n\n")
 
@@ -447,7 +450,7 @@ func (m model) viewSearch() string {
 		}
 	}
 
-	help := helpStyle.Render("  ↑↓ navigate • enter select • esc clear • q quit • ctrl+c quit")
+	help := helpStyle.Render("  ↑↓ (navigate) • enter (select) • esc (clear) • ctrl+c (quit)")
 	b.WriteString("\n" + help)
 
 	return b.String()
@@ -468,14 +471,11 @@ func (m model) viewDetail() string {
 		b.WriteString(cats + "\n\n")
 	}
 
-	label := latestBadge.Render("LATEST")
-	ver := lipgloss.NewStyle().Foreground(accentColor).Bold(true).Render(pkg.LatestStable.Version)
-	date := dateStyle.Render(pkg.LatestStable.Date)
-	b.WriteString(fmt.Sprintf("  %s  %s  %s\n\n", label, ver, date))
-
 	relHeader := subtitleStyle.Bold(true).Render("  Releases")
 	b.WriteString(relHeader + "\n")
 	b.WriteString("  " + dividerStyle.Render(strings.Repeat("─", 52)) + "\n")
+
+	releases := m.detailReleases
 
 	visibleReleases := m.height - 12
 	if visibleReleases < 3 {
@@ -483,13 +483,14 @@ func (m model) viewDetail() string {
 	}
 
 	end := m.releaseOffset + visibleReleases
-	if end > len(pkg.Releases) {
-		end = len(pkg.Releases)
+	if end > len(releases) {
+		end = len(releases)
 	}
 
 	for i := m.releaseOffset; i < end; i++ {
-		rel := pkg.Releases[i]
+		rel := releases[i]
 		selected := i == m.releaseCursor
+		isLatest := i == 0
 
 		if selected {
 			arrow := cursorStyle.Render("▸ ")
@@ -497,7 +498,10 @@ func (m model) viewDetail() string {
 			d := relDateSelStyle.Render(rel.Date)
 			line := fmt.Sprintf("  %s%s  %s", arrow, v, d)
 			if rel.Prerelease {
-				line += "  " + prereleaseBadge.Render("pre")
+				line += " " + prereleaseBadge.Render("pre")
+			}
+			if isLatest {
+				line += " " + latestBadge.Render("latest")
 			}
 			b.WriteString(line + "\n")
 		} else {
@@ -507,19 +511,27 @@ func (m model) viewDetail() string {
 			if rel.Prerelease {
 				line += "  " + prerelDimStyle.Render("pre")
 			}
+			if isLatest {
+				line += "  " + latestDimBadge.Render("latest")
+			}
 			b.WriteString(line + "\n")
+		}
+
+		// Divider after the pinned latest stable
+		if isLatest {
+			b.WriteString("  " + dividerStyle.Render(strings.Repeat("─", 52)) + "\n")
 		}
 	}
 
-	if len(pkg.Releases) > visibleReleases {
-		pct := float64(m.releaseCursor) / float64(max(1, len(pkg.Releases)-1)) * 100
+	if len(releases) > visibleReleases {
+		pct := float64(m.releaseCursor) / float64(max(1, len(releases)-1)) * 100
 		info := scrollInfoStyle.Render(
-			fmt.Sprintf("  ── %d/%d (%.0f%%) ──", m.releaseCursor+1, len(pkg.Releases), pct),
+			fmt.Sprintf("  ── %d/%d (%.0f%%) ──", m.releaseCursor+1, len(releases), pct),
 		)
 		b.WriteString("\n" + info)
 	}
 
-	help := helpStyle.Render("  ↑↓/jk scroll • C copy version • esc back • q quit")
+	help := helpStyle.Render("  ↑↓ (navigate) • c (copy) • esc (back) • ctrl+c (quit)")
 	b.WriteString("\n" + help)
 
 	return b.String()
