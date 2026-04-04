@@ -90,20 +90,34 @@ gh release create "$tag" "${assets[@]}" \
   --title "$tag" \
   --generate-notes
 
-# ── Print Homebrew tap info ─────────────────────────────────────────────────
+# ── Print Homebrew tap formula snippet ──────────────────────────────────────
+
+sha_for() { shasum -a 256 "$1" | awk '{print $1}'; }
+url_for() { echo "https://github.com/$REPO/releases/download/$tag/$(basename "$1")"; }
 
 echo ""
-echo "Done! Homebrew tap info:"
+echo "Done! Update homebrew-tap Formula/vrs.rb:"
 echo ""
-
-for asset in "${assets[@]}"; do
-  filename=$(basename "$asset")
-  url="https://github.com/$REPO/releases/download/$tag/$filename"
-  sha=$(shasum -a 256 "$asset" | awk '{print $1}')
-  echo "  $filename"
-  echo "  url:    $url"
-  echo "  sha256: $sha"
-  echo ""
-done
+echo "  version \"$new\""
+echo ""
+echo "  on_macos do"
+echo "    if Hardware::CPU.arm?"
+echo "      url \"$(url_for "${assets[0]}")\""
+echo "      sha256 \"$(sha_for "${assets[0]}")\""
+echo "    else"
+echo "      url \"$(url_for "${assets[1]}")\""
+echo "      sha256 \"$(sha_for "${assets[1]}")\""
+echo "    end"
+echo "  end"
+echo ""
+echo "  on_linux do"
+echo "    if Hardware::CPU.arm?"
+echo "      url \"$(url_for "${assets[2]}")\""
+echo "      sha256 \"$(sha_for "${assets[2]}")\""
+echo "    else"
+echo "      url \"$(url_for "${assets[3]}")\""
+echo "      sha256 \"$(sha_for "${assets[3]}")\""
+echo "    end"
+echo "  end"
 
 rm -f "${assets[@]}"
