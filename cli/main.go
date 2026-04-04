@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"net/http"
 	"os"
@@ -17,6 +18,8 @@ import (
 )
 
 const apiURL = "https://versions.gregdev.com/api/packages"
+
+var version = "dev"
 
 // ── Styles ──────────────────────────────────────────────────────────────────
 
@@ -171,8 +174,8 @@ type model struct {
 	detailReleases []Release
 	releaseCursor  int
 	releaseOffset  int
-	copiedVersion string
-	copiedPkgName string
+	copiedVersion  string
+	copiedPkgName  string
 
 	width, height int
 }
@@ -365,8 +368,8 @@ func (m model) updateDetail(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "c", "C":
 			ver := m.detailReleases[m.releaseCursor].Version
 			if err := clipboard.WriteAll(ver); err != nil {
-					termenv.Copy(ver)
-				}
+				termenv.Copy(ver)
+			}
 			m.copiedVersion = ver
 			m.copiedPkgName = m.selectedPkg.Name
 			return m, tea.Quit
@@ -578,6 +581,14 @@ func renderName(name string, matchedIndexes []int, selected bool) string {
 // ── Main ────────────────────────────────────────────────────────────────────
 
 func main() {
+	showVersion := flag.Bool("version", false, "print version")
+	flag.BoolVar(showVersion, "v", false, "print version")
+	flag.Parse()
+	if *showVersion {
+		fmt.Println(version)
+		return
+	}
+
 	p := tea.NewProgram(initialModel(), tea.WithAltScreen())
 	finalModel, err := p.Run()
 	if err != nil {
