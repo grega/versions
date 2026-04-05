@@ -205,7 +205,7 @@ type fetchErrMsg struct{ err error }
 
 func (e fetchErrMsg) Error() string { return e.err.Error() }
 
-type clearFlashMsg struct{}
+type clearFlashMsg struct{ id int }
 
 // ── State ───────────────────────────────────────────────────────────────────
 
@@ -235,6 +235,7 @@ type model struct {
 	copiedVersion  string
 	copiedPkgName  string
 	copiedFlash    string
+	flashID        int
 
 	width, height int
 }
@@ -338,7 +339,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tea.Quit
 
 	case clearFlashMsg:
-		m.copiedFlash = ""
+		if msg.id == m.flashID {
+			m.copiedFlash = ""
+		}
 		return m, nil
 
 	case spinner.TickMsg:
@@ -449,9 +452,11 @@ func (m model) updateDetail(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if err := clipboard.WriteAll(ver); err != nil {
 				termenv.Copy(ver)
 			}
+			m.flashID++
 			m.copiedFlash = ver
+			id := m.flashID
 			return m, tea.Tick(3*time.Second, func(time.Time) tea.Msg {
-				return clearFlashMsg{}
+				return clearFlashMsg{id: id}
 			})
 		case "enter":
 			ver := m.detailReleases[m.releaseCursor].Version
