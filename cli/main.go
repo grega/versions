@@ -133,6 +133,7 @@ var (
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(primaryColor).
 			Padding(0, 2).
+			MarginLeft(2).
 			MarginBottom(1)
 
 	categoryStyle = lipgloss.NewStyle().
@@ -547,7 +548,7 @@ func (m model) viewDetail() string {
 	var b strings.Builder
 
 	header := headerStyle.Render(pkg.Name)
-	b.WriteString("\n" + header + "\n")
+	b.WriteString(header + "\n")
 
 	if len(pkg.Categories) > 0 {
 		cats := categoryStyle.Render("  " + strings.Join(pkg.Categories, " · "))
