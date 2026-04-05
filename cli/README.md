@@ -24,6 +24,7 @@ brew install grega/tap/vrs
 | `↑` / `↓` | Navigate the lists |
 | `Enter` | Select a package / copy version & quit |
 | `C` | Copy selected version to clipboard |
+| `O` | Open package source URL in browser |
 | `Esc` | Clear search / go back / quit |
 | `Ctrl+C` | Quit |
 

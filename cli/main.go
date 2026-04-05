@@ -7,7 +7,9 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -119,8 +121,7 @@ var (
 			Foreground(dimColor)
 
 	helpStyle = lipgloss.NewStyle().
-			Foreground(mutedColor).
-			MarginTop(1)
+			Foreground(mutedColor)
 
 	headerStyle = lipgloss.NewStyle().
 			Bold(true).
@@ -150,6 +151,7 @@ var (
 	latestDimBadge     = lipgloss.NewStyle().Foreground(accentColor).Bold(true)
 	dividerStyle       = lipgloss.NewStyle().Foreground(mutedColor)
 	scrollInfoStyle    = lipgloss.NewStyle().Foreground(mutedColor)
+	helpKeyStyle       = lipgloss.NewStyle().Foreground(secondaryColor).Bold(true)
 	copiedStyle        = lipgloss.NewStyle().Foreground(accentColor).Bold(true)
 )
 
@@ -458,6 +460,9 @@ func (m model) updateDetail(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Tick(3*time.Second, func(time.Time) tea.Msg {
 				return clearFlashMsg{id: id}
 			})
+		case "o", "O":
+			openURL(m.selectedPkg.SourceURL)
+			return m, nil
 		case "enter":
 			ver := m.detailReleases[m.releaseCursor].Version
 			if err := clipboard.WriteAll(ver); err != nil {
@@ -549,8 +554,8 @@ func (m model) viewSearch() string {
 		}
 	}
 
-	help := helpStyle.Render("  ↑↓ (navigate) • enter (select) • esc (clear) • ctrl+c (quit)")
-	b.WriteString("\n" + help)
+	help := helpStyle.Render(helpLine(helpItem("↑↓", "navigate"), helpItem("enter", "select"), helpItem("esc", "clear"), helpItem("ctrl+c", "quit")))
+	b.WriteString("\n\n" + help)
 
 	return b.String()
 }
@@ -635,13 +640,33 @@ func (m model) viewDetail() string {
 		b.WriteString("\n" + flash)
 	}
 
-	help := helpStyle.Render("  ↑↓ (navigate) • c (copy) • enter (copy & quit) • esc (back) • ctrl+c (quit)")
-	b.WriteString("\n" + help)
+	help1 := helpStyle.Render(helpLine(helpItem("↑↓", "navigate"), helpItem("c", "copy"), helpItem("enter", "copy & quit")))
+	help2 := helpStyle.Render(helpLine(helpItem("o", "open source in browser"), helpItem("esc", "back"), helpItem("ctrl+c", "quit")))
+	b.WriteString("\n\n" + help1 + "\n" + help2)
 
 	return b.String()
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
+
+func helpItem(key, desc string) string {
+	return helpKeyStyle.Render(key) + " (" + desc + ")"
+}
+
+func helpLine(items ...string) string {
+	return "  " + strings.Join(items, " • ")
+}
+
+func openURL(url string) {
+	var cmd string
+	switch runtime.GOOS {
+	case "darwin":
+		cmd = "open"
+	default:
+		cmd = "xdg-open"
+	}
+	exec.Command(cmd, url).Start()
+}
 
 func renderName(name string, matchedIndexes []int, selected bool) string {
 	if len(matchedIndexes) == 0 {
