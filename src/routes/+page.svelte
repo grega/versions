@@ -207,7 +207,7 @@
 			<h1><a href="/">Versions</a></h1>
 			<p class="tagline">Release information for an (opinionated) selection of languages, frameworks, and tools</p>
 			<div class="header-meta">
-				<span class="built-at">
+				<div class="built-at">
 					<button
 						type="button"
 						class="theme-btn"
@@ -218,10 +218,12 @@
 						{@render themeIcon(themePreference)}
 						<span class="theme-value">{themeLabel(themePreference)}</span>
 					</button>
-					Updated <time datetime={data.builtAt}>{new Date(data.builtAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</time>
+					<div class="build-info">
+						Updated <time datetime={data.builtAt}>{new Date(data.builtAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</time>
 					&middot; <a href="https://github.com/grega/versions/tree/main/cli" rel="noopener" class="cli-link">CLI</a>
 					&middot; <a href="https://github.com/grega/versions" rel="noopener" class="github-link">GitHub</a>
-				</span>
+					</div>
+				</div>
 			</div>
 		</div>
 		<div class="controls">
