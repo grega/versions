@@ -76,13 +76,13 @@ Some GitHub repos don't use clean version tags. Monorepos publish multiple packa
 
 Use `tagPattern` and `tagReplace` to handle these:
 
-- **`tagPattern`** — a regex to filter tags. Only tags matching the pattern are included.
-- **`tagReplace`** — a map of string replacements applied to the tag to produce a clean version number. Applied before the automatic `v` prefix stripping.
+- `tagPattern` - a regex to filter tags. Only tags matching the pattern are included.
+- `tagReplace` - a map of string replacements applied to the tag to produce a clean version number. Applied before the automatic `v` prefix stripping.
 
 Examples:
 
 ```yaml
-# Monorepo — only match the main package, strip the prefix
+# Monorepo - only match the main package, strip the prefix
 - name: Astro
   source: github
   repo: withastro/astro
