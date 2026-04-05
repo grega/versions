@@ -416,7 +416,7 @@ func (m model) updateDetail(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	if msg, ok := msg.(tea.KeyMsg); ok {
-		visibleReleases := m.height - 12
+		visibleReleases := m.height - 16
 		if visibleReleases < 3 {
 			visibleReleases = 3
 		}
@@ -561,7 +561,7 @@ func (m model) viewDetail() string {
 
 	releases := m.detailReleases
 
-	visibleReleases := m.height - 12
+	visibleReleases := m.height - 16
 	if visibleReleases < 3 {
 		visibleReleases = 3
 	}
