@@ -93,11 +93,6 @@ var (
 	textColor      = lipgloss.AdaptiveColor{Light: "#1F2937", Dark: "#F9FAFB"}
 	dimColor       = lipgloss.AdaptiveColor{Light: "#6B7280", Dark: "#9CA3AF"}
 
-	titleStyle = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(primaryColor).
-			MarginBottom(1)
-
 	subtitleStyle = lipgloss.NewStyle().
 			Foreground(secondaryColor)
 
@@ -106,7 +101,7 @@ var (
 			BorderForeground(primaryColor).
 			Padding(0, 1).
 			Width(42).
-			MarginLeft(2)
+			MarginLeft(0)
 
 	latestBadge = lipgloss.NewStyle().
 			Background(accentColor).
@@ -133,8 +128,7 @@ var (
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(primaryColor).
 			Padding(0, 2).
-			MarginLeft(2).
-			MarginBottom(1)
+			MarginLeft(0)
 
 	categoryStyle = lipgloss.NewStyle().
 			Foreground(secondaryColor).
@@ -211,6 +205,8 @@ type fetchErrMsg struct{ err error }
 
 func (e fetchErrMsg) Error() string { return e.err.Error() }
 
+type clearFlashMsg struct{}
+
 // ── State ───────────────────────────────────────────────────────────────────
 
 type viewState int
@@ -238,6 +234,7 @@ type model struct {
 	releaseOffset  int
 	copiedVersion  string
 	copiedPkgName  string
+	copiedFlash    string
 
 	width, height int
 }
@@ -339,6 +336,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case fetchErrMsg:
 		m.err = msg.err
 		return m, tea.Quit
+
+	case clearFlashMsg:
+		m.copiedFlash = ""
+		return m, nil
 
 	case spinner.TickMsg:
 		if m.state == stateLoading {
@@ -448,6 +449,15 @@ func (m model) updateDetail(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if err := clipboard.WriteAll(ver); err != nil {
 				termenv.Copy(ver)
 			}
+			m.copiedFlash = ver
+			return m, tea.Tick(3*time.Second, func(time.Time) tea.Msg {
+				return clearFlashMsg{}
+			})
+		case "enter":
+			ver := m.detailReleases[m.releaseCursor].Version
+			if err := clipboard.WriteAll(ver); err != nil {
+				termenv.Copy(ver)
+			}
 			m.copiedVersion = ver
 			m.copiedPkgName = m.selectedPkg.Name
 			return m, tea.Quit
@@ -548,14 +558,14 @@ func (m model) viewDetail() string {
 	var b strings.Builder
 
 	header := headerStyle.Render(pkg.Name)
-	b.WriteString(header + "\n")
-
 	if len(pkg.Categories) > 0 {
 		cats := categoryStyle.Render("  " + strings.Join(pkg.Categories, " · "))
-		b.WriteString(cats + "\n\n")
+		b.WriteString(lipgloss.JoinHorizontal(lipgloss.Center, header, cats) + "\n")
+	} else {
+		b.WriteString(header + "\n")
 	}
 
-	relHeader := subtitleStyle.Bold(true).Render("  Releases")
+	relHeader := subtitleStyle.Bold(true).MarginTop(1).Render("  Releases")
 	b.WriteString(relHeader + "\n")
 	b.WriteString("  " + dividerStyle.Render(strings.Repeat("─", 52)) + "\n")
 
@@ -615,7 +625,12 @@ func (m model) viewDetail() string {
 		b.WriteString("\n" + info)
 	}
 
-	help := helpStyle.Render("  ↑↓ (navigate) • c (copy) • esc (back) • ctrl+c (quit)")
+	if m.copiedFlash != "" {
+		flash := copiedStyle.Render(fmt.Sprintf("  ✓ Copied %s", m.copiedFlash))
+		b.WriteString("\n" + flash)
+	}
+
+	help := helpStyle.Render("  ↑↓ (navigate) • c (copy) • enter (copy & quit) • esc (back) • ctrl+c (quit)")
 	b.WriteString("\n" + help)
 
 	return b.String()

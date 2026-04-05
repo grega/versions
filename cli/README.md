@@ -22,8 +22,8 @@ brew install grega/tap/vrs
 |---|---|
 | Type | Fuzzy-search packages by name |
 | `↑` / `↓` | Navigate the lists |
-| `Enter` | Select a package |
-| `C` | Copy selected version to clipboard and quit |
+| `Enter` | Select a package / copy version & quit |
+| `C` | Copy selected version to clipboard |
 | `Esc` | Clear search / go back / quit |
 | `Ctrl+C` | Quit |
 
