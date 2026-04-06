@@ -522,6 +522,17 @@ packages:
     categories: Tools
     url: https://github.com/webpack/webpack/releases
 
+  - name: Bun
+    source: github
+    repo: oven-sh/bun
+    tagPattern: "^bun-v\\d"
+    tagReplace:
+      "bun-v": ""
+    categories:
+      - Tools
+      - Node.js
+    url: https://github.com/oven-sh/bun/releases
+
   - name: Yarn
     source: npm
     package: yarn
