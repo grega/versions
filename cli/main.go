@@ -91,6 +91,7 @@ var (
 	secondaryColor = lipgloss.AdaptiveColor{Light: "#7C3AED", Dark: "#A78BFA"}
 	accentColor    = lipgloss.AdaptiveColor{Light: "#059669", Dark: "#34D399"}
 	warningColor   = lipgloss.AdaptiveColor{Light: "#D97706", Dark: "#FBBF24"}
+	errorColor     = lipgloss.AdaptiveColor{Light: "#DC2626", Dark: "#F87171"}
 	mutedColor     = lipgloss.AdaptiveColor{Light: "#6B7280", Dark: "#6B7280"}
 	textColor      = lipgloss.AdaptiveColor{Light: "#1F2937", Dark: "#F9FAFB"}
 	dimColor       = lipgloss.AdaptiveColor{Light: "#6B7280", Dark: "#9CA3AF"}
@@ -153,6 +154,18 @@ var (
 	scrollInfoStyle    = lipgloss.NewStyle().Foreground(mutedColor)
 	helpKeyStyle       = lipgloss.NewStyle().Foreground(secondaryColor).Bold(true)
 	copiedStyle        = lipgloss.NewStyle().Foreground(accentColor).Bold(true)
+
+	errorBoxStyle = lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(errorColor).
+			Padding(0, 2).
+			MarginLeft(0).
+			Width(72)
+	errorTitleStyle = lipgloss.NewStyle().
+			Foreground(errorColor).
+			Bold(true)
+	errorDetailStyle = lipgloss.NewStyle().
+			Foreground(dimColor)
 )
 
 // ── API Types ───────────────────────────────────────────────────────────────
@@ -721,7 +734,10 @@ func main() {
 
 	if fm, ok := finalModel.(model); ok {
 		if fm.err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", fm.err)
+			title := errorTitleStyle.Render("Failed to fetch package data")
+			detail := errorDetailStyle.Render(fm.err.Error())
+			box := errorBoxStyle.Render(title + "\n" + detail)
+			fmt.Fprintln(os.Stderr, "\n"+box+"\n")
 			os.Exit(1)
 		}
 		if fm.copiedVersion != "" {
