@@ -646,9 +646,9 @@ func (m model) viewSearch() string {
 
 	if m.fromCache {
 		expiresAt := m.cacheFetchedAt.Add(cacheTTL)
-		remaining := time.Until(expiresAt).Truncate(time.Minute)
+		remaining := int(time.Until(expiresAt).Minutes())
 		cacheStyle := lipgloss.NewStyle().Foreground(mutedColor)
-		cacheNote := cacheStyle.Render(fmt.Sprintf("  Packages loaded from cache: %s (refreshes in %s)", m.cachePath, remaining))
+		cacheNote := cacheStyle.Render(fmt.Sprintf("  Packages loaded from cache: %s (refreshes in %dm)", m.cachePath, remaining))
 		b.WriteString("\n\n" + cacheNote)
 	}
 
