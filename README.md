@@ -21,14 +21,14 @@ asdf install
 ## Quick start
 
 ```
-cp .env.example .env     # add your GITHUB_TOKEN
+cp .env.example .env     # add your GITHUB_TOKEN (see below)
 npm install
 npm run dev
 ```
 
 Open http://localhost:5173. The dev server fetches version data live on each page load.
 
-A `GITHUB_TOKEN` is needed to avoid GitHub API rate limits (60 req/hr without one, 5,000 with). Create a token at https://github.com/settings/tokens - no scopes needed for public repos. Some GitHub orgs restrict fine-grained tokens by lifetime policy (eg. "token lifetime cannot be > 1 year"), causing 403 errors - the fetcher automatically retries without auth in these cases.
+A `GITHUB_TOKEN` is needed to avoid GitHub API rate limits (60 req/hr without one, 5,000 with). Create a token at https://github.com/settings/tokens - no scopes needed for public repos. Some GitHub orgs restrict fine-grained tokens by lifetime policy (eg. "token lifetime cannot be > 1 year"), causing 403 errors, and the fetcher automatically retries without auth in these cases.
 
 ### API
 
@@ -42,10 +42,8 @@ curl http://localhost:5173/api/versions
 
 ```
 npm run build
-npm run preview   # serve the built site locally
+npm run preview
 ```
-
-This fetches all version data from public APIs and bakes it into static HTML. The output goes to `build/`.
 
 ## Adding a package
 
@@ -119,15 +117,11 @@ npm test            # run all tests once
 npm run test:watch  # re-run on file changes
 ```
 
-Unit tests cover each fetcher (GitHub, RubyGems, npm, PyPI, Node.js, endoflife.date) with mocked API responses, plus config validation and a build smoke test. CI runs automatically on push and PRs via GitHub Actions.
-
-## How it works
-
-At build time, `+page.server.ts` reads `packages.yml`, calls the appropriate API for each package via fetchers in `src/lib/fetchers/`, normalises the results, and passes them to the Svelte page. SvelteKit's static adapter renders everything to plain HTML with the data embedded. Client-side JS handles search, filtering, and expand/collapse - no further network requests.
-
 ## Deployment
 
-See [dokku.md](dokku.md) for full setup instructions - creating the app, configuring the domain, setting the GitHub token, and scheduling rebuilds via cron.
+I love to run Dokku on a VM for personal projects, it's a very cheap and effective way of hosting many apps all with single push-to-deploy release processes.
+
+See [dokku.md](dokku.md) for full setup instructions.
 
 The short version:
 
