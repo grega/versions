@@ -71,19 +71,19 @@ func cacheFilePath() string {
 	return filepath.Join(dir, "vrs", "packages.json")
 }
 
-func loadCache(path string) []Package {
+func loadCache(path string) ([]Package, time.Time) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil
+		return nil, time.Time{}
 	}
 	var cached cachedResponse
 	if err := json.Unmarshal(data, &cached); err != nil {
-		return nil
+		return nil, time.Time{}
 	}
 	if time.Since(cached.FetchedAt) > cacheTTL {
-		return nil
+		return nil, time.Time{}
 	}
-	return cached.Packages
+	return cached.Packages, cached.FetchedAt
 }
 
 func writeCache(path string, packages []Package) {
@@ -245,7 +245,12 @@ func (p packageSource) Len() int            { return len(p) }
 
 // ── Messages ────────────────────────────────────────────────────────────────
 
-type packagesFetchedMsg []Package
+type packagesFetchedMsg struct {
+	packages       []Package
+	fromCache      bool
+	cachePath      string
+	cacheFetchedAt time.Time
+}
 
 type fetchErrMsg struct{ err error }
 
@@ -289,6 +294,10 @@ type model struct {
 	copiedFlash    string
 	flashID        int
 
+	fromCache      bool
+	cachePath      string
+	cacheFetchedAt time.Time
+
 	width, height int
 }
 
@@ -321,8 +330,8 @@ func (m model) Init() tea.Cmd {
 
 func fetchPackages() tea.Msg {
 	if path := cacheFilePath(); path != "" {
-		if packages := loadCache(path); packages != nil {
-			return packagesFetchedMsg(packages)
+		if packages, fetchedAt := loadCache(path); packages != nil {
+			return packagesFetchedMsg{packages: packages, fromCache: true, cachePath: path, cacheFetchedAt: fetchedAt}
 		}
 	}
 
@@ -346,7 +355,7 @@ func fetchPackages() tea.Msg {
 		writeCache(path, packages)
 	}
 
-	return packagesFetchedMsg(packages)
+	return packagesFetchedMsg{packages: packages}
 }
 
 // ── Filtering ───────────────────────────────────────────────────────────────
@@ -381,7 +390,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case packagesFetchedMsg:
-		m.packages = msg
+		m.packages = msg.packages
+		m.fromCache = msg.fromCache
+		m.cachePath = msg.cachePath
+		m.cacheFetchedAt = msg.cacheFetchedAt
 		m.state = stateSearch
 		m.filterPackages()
 		return m, m.input.Focus()
@@ -579,6 +591,9 @@ func (m model) viewSearch() string {
 		b.WriteString("  " + nameDimStyle.Render("No matches found") + "\n")
 	} else {
 		visibleItems := m.height - 10
+		if m.fromCache {
+			visibleItems -= 2
+		}
 		if visibleItems < 3 {
 			visibleItems = 3
 		}
@@ -628,6 +643,14 @@ func (m model) viewSearch() string {
 
 	help := helpStyle.Render(helpLine(helpItem("↑↓", "navigate"), helpItem("enter", "select"), helpItem("esc", "clear"), helpItem("ctrl+c", "quit")))
 	b.WriteString("\n\n" + help)
+
+	if m.fromCache {
+		expiresAt := m.cacheFetchedAt.Add(cacheTTL)
+		remaining := time.Until(expiresAt).Truncate(time.Minute)
+		cacheStyle := lipgloss.NewStyle().Foreground(mutedColor)
+		cacheNote := cacheStyle.Render(fmt.Sprintf("  Packages loaded from cache: %s (refreshes in %s)", m.cachePath, remaining))
+		b.WriteString("\n\n" + cacheNote)
+	}
 
 	return b.String()
 }
