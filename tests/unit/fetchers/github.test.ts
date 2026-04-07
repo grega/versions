@@ -31,6 +31,7 @@ describe('fetchGitHub', () => {
 
 		expect(result.name).toBe('TestPkg');
 		expect(result.categories).toEqual(['Tools']);
+		expect(result.sourceUrl).toBe('https://github.com/example/repo/releases');
 		expect(result.error).toBeUndefined();
 		expect(result.releases).toHaveLength(4);
 
@@ -129,6 +130,34 @@ describe('fetchGitHub', () => {
 		expect(result.latest?.date).toBe('2026-03-10');
 		expect(result.releases[2].version).toBe('15.6');
 		expect(result.releases[2].date).toBe('2026-02-20');
+		// sourceUrl should be rewritten to /tags when falling back
+		expect(result.sourceUrl).toBe('https://github.com/example/repo/tags');
+	});
+
+	it('keeps sourceUrl unchanged when tags fallback URL does not end with /releases', async () => {
+		const commitDate = (date: string) =>
+			new Response(JSON.stringify({ committer: { date: `${date}T12:00:00Z` } }), {
+				status: 200
+			});
+
+		vi.spyOn(globalThis, 'fetch')
+			.mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
+			.mockResolvedValueOnce(new Response(JSON.stringify(tagsFixture), { status: 200 }))
+			.mockResolvedValueOnce(commitDate('2026-03-10'))
+			.mockResolvedValueOnce(commitDate('2026-03-05'))
+			.mockResolvedValueOnce(commitDate('2026-02-20'))
+			.mockResolvedValueOnce(commitDate('2026-02-10'))
+			.mockResolvedValueOnce(commitDate('2026-01-15'));
+
+		const config: PackageConfig = {
+			...baseConfig,
+			url: 'https://www.postgresql.org/docs/release/',
+			tagPattern: '^REL_\\d+_\\d+$',
+			tagReplace: { REL_: '', _: '.' }
+		};
+		const result = await fetchGitHub(config);
+
+		expect(result.sourceUrl).toBe('https://www.postgresql.org/docs/release/');
 	});
 
 	it('filters monorepo releases by tagPattern (e.g. Astro)', async () => {

@@ -106,6 +106,7 @@ async function fetchTags(
 
 export async function fetchGitHub(config: PackageConfig): Promise<PackageInfo> {
 	const repo = config.repo!;
+	let usedTags = false;
 
 	let releases: Release[];
 	if (config.tagPattern) {
@@ -114,6 +115,7 @@ export async function fetchGitHub(config: PackageConfig): Promise<PackageInfo> {
 		// Fall back to tags API if no releases matched
 		if (releases.length === 0) {
 			releases = await fetchTags(repo, config.tagPattern, config.tagReplace ?? {});
+			usedTags = true;
 		}
 	} else {
 		releases = await fetchReleases(repo);
@@ -121,10 +123,15 @@ export async function fetchGitHub(config: PackageConfig): Promise<PackageInfo> {
 
 	const stableReleases = releases.filter((r) => !r.prerelease);
 
+	let sourceUrl = config.url;
+	if (usedTags && sourceUrl.endsWith('/releases')) {
+		sourceUrl = sourceUrl.slice(0, -'/releases'.length) + '/tags';
+	}
+
 	return {
 		name: config.name,
 		categories: config.categories,
-		sourceUrl: config.url,
+		sourceUrl,
 		latest: highestVersion(releases),
 		latestStable: highestVersion(stableReleases),
 		releases,
