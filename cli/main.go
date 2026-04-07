@@ -30,12 +30,20 @@ var version = "dev"
 // asdfPluginMap maps package display names to their asdf plugin names.
 // Only packages with an asdf plugin are included.
 var asdfPluginMap = map[string]string{
+	"Bats":          "bats",
 	"Bun":           "bun",
+	"Caddy":         "caddy",
+	"Cloudflared":   "cloudflared",
 	"Elixir":        "elixir",
 	"Go":            "golang",
 	"golangci-lint": "golangci-lint",
 	"GitHub CLI":    "github-cli",
+	"Helm":          "helm",
+	"Kafka":         "kafka",
+	"kubectl":       "kubectl",
 	"Kubernetes":    "kubectl",
+	"Memcached":     "memcached",
+	"MongoDB":       "mongodb",
 	"MySQL":         "mysql",
 	"Node.js":       "nodejs",
 	"PHP":           "php",

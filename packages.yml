@@ -401,6 +401,26 @@ packages:
     categories: Databases
     url: https://www.sqlite.org/changes.html
 
+  - name: MongoDB
+    source: endoflife
+    product: mongodb
+    categories: Databases
+    url: https://www.mongodb.com/try/download/community
+
+  - name: Memcached
+    source: github
+    repo: memcached/memcached
+    tagPattern: "^\\d+\\.\\d+\\.\\d+$"
+    categories: Databases
+    url: https://github.com/memcached/memcached/releases
+
+  - name: Kafka
+    source: github
+    repo: apache/kafka
+    tagPattern: "^\\d+\\.\\d+\\.\\d+$"
+    categories: Databases
+    url: https://kafka.apache.org/downloads
+
   # DevOps & Infra
   - name: Ansible
     source: github
@@ -440,6 +460,36 @@ packages:
     repo: hashicorp/terraform
     categories: DevOps
     url: https://github.com/hashicorp/terraform/releases
+
+  - name: kubectl
+    source: github
+    repo: kubernetes/kubernetes
+    categories: DevOps
+    url: https://kubernetes.io/releases/
+
+  - name: Helm
+    source: github
+    repo: helm/helm
+    categories: DevOps
+    url: https://github.com/helm/helm/releases
+
+  - name: Cloudflared
+    source: github
+    repo: cloudflare/cloudflared
+    categories: DevOps
+    url: https://github.com/cloudflare/cloudflared/releases
+
+  - name: Caddy
+    source: github
+    repo: caddyserver/caddy
+    categories: DevOps
+    url: https://github.com/caddyserver/caddy/releases
+
+  - name: HAProxy
+    source: endoflife
+    product: haproxy
+    categories: DevOps
+    url: https://www.haproxy.org/
 
   # Tools
   - name: Composer
@@ -540,3 +590,9 @@ packages:
       - Tools
       - Node.js
     url: https://github.com/yarnpkg/berry/releases
+
+  - name: Bats
+    source: github
+    repo: bats-core/bats-core
+    categories: Tools
+    url: https://github.com/bats-core/bats-core/releases
