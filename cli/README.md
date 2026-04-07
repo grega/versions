@@ -25,6 +25,7 @@ brew install grega/tap/vrs
 | `Enter` | Select a package / copy version & quit |
 | `C` | Copy selected version to clipboard |
 | `O` | Open package source URL in browser |
+| `T` | Write selected version to `.tool-versions` (asdf-supported packages only) |
 | `Esc` | Clear search / go back / quit |
 | `Ctrl+C` | Quit |
 
@@ -80,6 +81,10 @@ vhs demo.tape
 ```
 
 This outputs `demo.gif`.
+
+### asdf plugin map
+
+The `asdfPluginMap` in `main.go` maps package display names to their asdf plugin names. When adding a new package to the API that has an asdf plugin, add an entry to this map so the `T` keybinding works for it (run `asdf plugin list all` to see available plugins).
 
 ### Releasing
 

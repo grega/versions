@@ -27,6 +27,29 @@ const cacheTTL = 1 * time.Hour
 
 var version = "dev"
 
+// asdfPluginMap maps package display names to their asdf plugin names.
+// Only packages with an asdf plugin are included.
+var asdfPluginMap = map[string]string{
+	"Bun":           "bun",
+	"Elixir":        "elixir",
+	"Go":            "golang",
+	"golangci-lint": "golangci-lint",
+	"GitHub CLI":    "github-cli",
+	"Kubernetes":    "kubectl",
+	"MySQL":         "mysql",
+	"Node.js":       "nodejs",
+	"PHP":           "php",
+	"pnpm":          "pnpm",
+	"PostgreSQL":    "postgres",
+	"Python":        "python",
+	"Redis":         "redis",
+	"Ruby":          "ruby",
+	"Rust":          "rust",
+	"SQLite":        "sqlite",
+	"Terraform":     "terraform",
+	"Yarn":          "yarn",
+}
+
 type cachedResponse struct {
 	FetchedAt time.Time `json:"fetchedAt"`
 	Packages  []Package `json:"packages"`
@@ -165,7 +188,7 @@ var (
 			Foreground(errorColor).
 			Bold(true)
 	errorDetailStyle = lipgloss.NewStyle().
-			Foreground(dimColor)
+				Foreground(dimColor)
 )
 
 // ── API Types ───────────────────────────────────────────────────────────────
@@ -221,6 +244,12 @@ type fetchErrMsg struct{ err error }
 func (e fetchErrMsg) Error() string { return e.err.Error() }
 
 type clearFlashMsg struct{ id int }
+
+type toolVersionWrittenMsg struct {
+	pluginName string
+	version    string
+	err        error
+}
 
 // ── State ───────────────────────────────────────────────────────────────────
 
@@ -359,6 +388,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
+	case toolVersionWrittenMsg:
+		if msg.err != nil {
+			m.copiedFlash = fmt.Sprintf("Error: %s", msg.err)
+		} else {
+			m.copiedFlash = fmt.Sprintf("%s %s → .tool-versions", msg.pluginName, strings.TrimPrefix(msg.version, "v"))
+		}
+		return m, nil
+
 	case spinner.TickMsg:
 		if m.state == stateLoading {
 			var cmd tea.Cmd
@@ -468,11 +505,25 @@ func (m model) updateDetail(msg tea.Msg) (tea.Model, tea.Cmd) {
 				termenv.Copy(ver)
 			}
 			m.flashID++
-			m.copiedFlash = ver
+			m.copiedFlash = fmt.Sprintf("Copied %s", ver)
 			id := m.flashID
 			return m, tea.Tick(3*time.Second, func(time.Time) tea.Msg {
 				return clearFlashMsg{id: id}
 			})
+		case "t", "T":
+			pluginName, ok := asdfPluginMap[m.selectedPkg.Name]
+			if !ok {
+				return m, nil
+			}
+			ver := m.detailReleases[m.releaseCursor].Version
+			m.flashID++
+			id := m.flashID
+			return m, tea.Batch(
+				writeToolVersionCmd(pluginName, ver),
+				tea.Tick(3*time.Second, func(time.Time) tea.Msg {
+					return clearFlashMsg{id: id}
+				}),
+			)
 		case "o", "O":
 			openURL(m.selectedPkg.SourceURL)
 			return m, nil
@@ -649,11 +700,15 @@ func (m model) viewDetail() string {
 	}
 
 	if m.copiedFlash != "" {
-		flash := copiedStyle.Render(fmt.Sprintf("  ✓ Copied %s", m.copiedFlash))
+		flash := copiedStyle.Render(fmt.Sprintf("  ✓ %s", m.copiedFlash))
 		b.WriteString("\n" + flash)
 	}
 
-	help1 := helpStyle.Render(helpLine(helpItem("↑↓", "navigate"), helpItem("c", "copy"), helpItem("enter", "copy & quit")))
+	help1Items := []string{helpItem("↑↓", "navigate"), helpItem("c", "copy"), helpItem("enter", "copy & quit")}
+	if _, ok := asdfPluginMap[pkg.Name]; ok {
+		help1Items = append(help1Items, helpItem("t", "add to .tool-versions"))
+	}
+	help1 := helpStyle.Render(helpLine(help1Items...))
 	help2 := helpStyle.Render(helpLine(helpItem("o", "open source in browser"), helpItem("esc", "back"), helpItem("ctrl+c", "quit")))
 	b.WriteString("\n\n" + help1 + "\n" + help2)
 
@@ -679,6 +734,52 @@ func openURL(url string) {
 		cmd = "xdg-open"
 	}
 	exec.Command(cmd, url).Start()
+}
+
+func writeToolVersion(pluginName, version string) error {
+	version = strings.TrimPrefix(version, "v")
+	path := ".tool-versions"
+	newLine := pluginName + " " + version
+
+	content, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return os.WriteFile(path, []byte(newLine+"\n"), 0o644)
+		}
+		return fmt.Errorf("reading %s: %w", path, err)
+	}
+
+	lines := strings.Split(string(content), "\n")
+	found := false
+	for i, line := range lines {
+		fields := strings.Fields(line)
+		if len(fields) >= 1 && fields[0] == pluginName {
+			lines[i] = newLine
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		if len(lines) > 0 && lines[len(lines)-1] == "" {
+			lines = lines[:len(lines)-1]
+		}
+		lines = append(lines, newLine)
+	}
+
+	output := strings.Join(lines, "\n")
+	if !strings.HasSuffix(output, "\n") {
+		output += "\n"
+	}
+
+	return os.WriteFile(path, []byte(output), 0o644)
+}
+
+func writeToolVersionCmd(pluginName, version string) tea.Cmd {
+	return func() tea.Msg {
+		err := writeToolVersion(pluginName, version)
+		return toolVersionWrittenMsg{pluginName: pluginName, version: version, err: err}
+	}
 }
 
 func renderName(name string, matchedIndexes []int, selected bool) string {
