@@ -49,8 +49,6 @@ asdf plugin add golang
 asdf install
 ```
 
-This will install the correct Go version automatically.
-
 ### Install Dependencies
 
 ```sh
@@ -72,10 +70,15 @@ go build -o vrs .
 
 ### Generating a new demo GIF
 
-Requires [VHS](https://github.com/charmbracelet/vhs). Build the binary, then run the tape:
+Requires [VHS](https://github.com/charmbracelet/vhs):
 
 ```sh
 brew install vhs
+```
+
+Build the `vrs` binary, then run the tape:
+
+```sh
 go build -o vrs .
 vhs demo.tape
 ```
@@ -104,4 +107,4 @@ This will:
 3. Package each as a `.tar.gz`
 4. Tag and push
 5. Create a GitHub release with all tarballs attached (`gh` CLI required)
-6. Print the URL and SHA-256 for each asset — use these to update the [Homebrew tap formula](https://github.com/grega/homebrew-tap)
+6. Print the URL and SHA-256 for each asset which are used to update the [Homebrew tap formula](https://github.com/grega/homebrew-tap)
