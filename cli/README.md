@@ -18,6 +18,8 @@ brew install grega/tap/vrs
 
 ## Usage
 
+Run `vrs` with no arguments to launch the interactive TUI:
+
 | Key | Action |
 |---|---|
 | Type | Fuzzy-search packages by name |
@@ -28,6 +30,18 @@ brew install grega/tap/vrs
 | `T` | Write selected version to `.tool-versions` (asdf-supported packages only) |
 | `Esc` | Clear search / go back / quit |
 | `Ctrl+C` | Quit |
+
+### Static mode
+
+Pass a package name to print its release list directly to stdout - handy for quick lookups:
+
+```sh
+vrs go
+vrs prettier
+vrs github cli   # multi-word names work without quotes
+```
+
+The match is case-insensitive. If the package isn't found, `vrs` exits with status 1 and suggests close matches.
 
 ## Caching
 

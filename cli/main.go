@@ -328,34 +328,47 @@ func (m model) Init() tea.Cmd {
 
 // ── Commands ────────────────────────────────────────────────────────────────
 
-func fetchPackages() tea.Msg {
+func loadPackages() ([]Package, bool, string, time.Time, error) {
 	if path := cacheFilePath(); path != "" {
 		if packages, fetchedAt := loadCache(path); packages != nil {
-			return packagesFetchedMsg{packages: packages, fromCache: true, cachePath: path, cacheFetchedAt: fetchedAt}
+			return packages, true, path, fetchedAt, nil
 		}
 	}
 
 	resp, err := http.Get(apiURL)
 	if err != nil {
-		return fetchErrMsg{err}
+		return nil, false, "", time.Time{}, err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fetchErrMsg{err}
+		return nil, false, "", time.Time{}, err
 	}
 
 	var packages []Package
 	if err := json.Unmarshal(body, &packages); err != nil {
-		return fetchErrMsg{err}
+		return nil, false, "", time.Time{}, err
 	}
 
 	if path := cacheFilePath(); path != "" {
 		writeCache(path, packages)
 	}
 
-	return packagesFetchedMsg{packages: packages}
+	return packages, false, "", time.Time{}, nil
+}
+
+func fetchPackages() tea.Msg {
+	packages, fromCache, cachePath, fetchedAt, err := loadPackages()
+	if err != nil {
+		return fetchErrMsg{err}
+	}
+	return packagesFetchedMsg{
+		packages:       packages,
+		fromCache:      fromCache,
+		cachePath:      cachePath,
+		cacheFetchedAt: fetchedAt,
+	}
 }
 
 // ── Filtering ───────────────────────────────────────────────────────────────
@@ -846,6 +859,91 @@ func renderName(name string, matchedIndexes []int, selected bool) string {
 	return result.String()
 }
 
+// ── Static (non-interactive) mode ───────────────────────────────────────────
+
+func findPackage(packages []Package, query string) *Package {
+	for i := range packages {
+		if strings.EqualFold(packages[i].Name, query) {
+			return &packages[i]
+		}
+	}
+	return nil
+}
+
+func renderStaticDetail(pkg *Package) string {
+	var b strings.Builder
+
+	header := headerStyle.Render(pkg.Name)
+	if len(pkg.Categories) > 0 {
+		cats := categoryStyle.Render("  " + strings.Join(pkg.Categories, " · "))
+		b.WriteString(lipgloss.JoinHorizontal(lipgloss.Center, header, cats) + "\n")
+	} else {
+		b.WriteString(header + "\n")
+	}
+
+	relHeader := subtitleStyle.Bold(true).MarginTop(1).Render("  Releases")
+	b.WriteString(relHeader + "\n")
+	b.WriteString("  " + dividerStyle.Render(strings.Repeat("─", 52)) + "\n")
+
+	releases := make([]Release, 0, len(pkg.Releases)+1)
+	releases = append(releases, pkg.LatestStable)
+	for _, r := range pkg.Releases {
+		if r.Version != pkg.LatestStable.Version {
+			releases = append(releases, r)
+		}
+	}
+
+	for i, rel := range releases {
+		isLatest := i == 0
+		v := relVerDimStyle.Render(fmt.Sprintf("%-28s", rel.Version))
+		d := dateStyle.Render(rel.Date)
+		line := fmt.Sprintf("    %s  %s", v, d)
+		if rel.Prerelease {
+			line += "  " + prerelDimStyle.Render("pre")
+		}
+		if isLatest {
+			line += "  " + latestDimBadge.Render("latest")
+		}
+		b.WriteString(line + "\n")
+
+		if isLatest {
+			b.WriteString("  " + dividerStyle.Render(strings.Repeat("─", 52)) + "\n")
+		}
+	}
+
+	return b.String()
+}
+
+func runStatic(query string) int {
+	packages, _, _, _, err := loadPackages()
+	if err != nil {
+		title := errorTitleStyle.Render("Failed to fetch package data")
+		detail := errorDetailStyle.Render(err.Error())
+		box := errorBoxStyle.Render(title + "\n" + detail)
+		fmt.Fprintln(os.Stderr, "\n"+box+"\n")
+		return 1
+	}
+
+	pkg := findPackage(packages, query)
+	if pkg == nil {
+		fmt.Fprintf(os.Stderr, "Package %q not found.", query)
+		matches := fuzzy.FindFrom(query, packageSource(packages))
+		if len(matches) > 0 {
+			limit := min(len(matches), 5)
+			suggestions := make([]string, 0, limit)
+			for _, m := range matches[:limit] {
+				suggestions = append(suggestions, packages[m.Index].Name)
+			}
+			fmt.Fprintf(os.Stderr, " Did you mean: %s?", strings.Join(suggestions, ", "))
+		}
+		fmt.Fprintln(os.Stderr)
+		return 1
+	}
+
+	fmt.Println(renderStaticDetail(pkg))
+	return 0
+}
+
 // ── Main ────────────────────────────────────────────────────────────────────
 
 func main() {
@@ -855,6 +953,10 @@ func main() {
 	if *showVersion {
 		fmt.Println(version)
 		return
+	}
+
+	if args := flag.Args(); len(args) > 0 {
+		os.Exit(runStatic(strings.Join(args, " ")))
 	}
 
 	p := tea.NewProgram(initialModel(), tea.WithAltScreen())
