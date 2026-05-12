@@ -23,7 +23,7 @@ import (
 )
 
 const apiURL = "https://versions.gregdev.com/api/packages"
-const cacheTTL = 1 * time.Hour
+const cacheTTL = 6 * time.Hour
 
 var version = "dev"
 
@@ -659,9 +659,24 @@ func (m model) viewSearch() string {
 
 	if m.fromCache {
 		expiresAt := m.cacheFetchedAt.Add(cacheTTL)
-		remaining := int(time.Until(expiresAt).Minutes())
+		remaining := time.Until(expiresAt)
+		var remainingStr string
+		switch {
+		case remaining < time.Minute:
+			remainingStr = "<1m"
+		case remaining < time.Hour:
+			remainingStr = fmt.Sprintf("%dm", int(remaining.Minutes()))
+		default:
+			h := int(remaining.Hours())
+			mins := int(remaining.Minutes()) - h*60
+			if mins == 0 {
+				remainingStr = fmt.Sprintf("%dh", h)
+			} else {
+				remainingStr = fmt.Sprintf("%dh %dm", h, mins)
+			}
+		}
 		cacheStyle := lipgloss.NewStyle().Foreground(mutedColor)
-		cacheNote := cacheStyle.Render(fmt.Sprintf("  Packages loaded from cache: %s (refreshes in %dm)", m.cachePath, remaining))
+		cacheNote := cacheStyle.Render(fmt.Sprintf("  Packages loaded from cache: %s (refreshes in %s)", m.cachePath, remainingStr))
 		b.WriteString("\n\n" + cacheNote)
 	}
 
