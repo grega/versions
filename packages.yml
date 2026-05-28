@@ -167,6 +167,14 @@ packages:
       - Libraries
     url: https://github.com/facebook/react/releases
 
+  - name: Sinatra
+    source: rubygems
+    gem: sinatra
+    categories:
+      - Frameworks
+      - Ruby
+    url: https://rubygems.org/gems/sinatra
+
   - name: Svelte
     source: npm
     package: svelte
