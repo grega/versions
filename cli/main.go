@@ -965,15 +965,52 @@ func runStatic(query string) int {
 	return 0
 }
 
+func runClearCache() int {
+	path := cacheFilePath()
+	if path == "" {
+		fmt.Fprintln(os.Stderr, "Could not determine cache location.")
+		return 1
+	}
+	if err := os.Remove(path); err != nil {
+		if os.IsNotExist(err) {
+			fmt.Printf("No cache to clear (%s).\n", path)
+			return 0
+		}
+		fmt.Fprintf(os.Stderr, "Failed to clear cache: %s\n", err)
+		return 1
+	}
+	fmt.Printf("Cleared cache at %s\n", path)
+	return 0
+}
+
 // ── Main ────────────────────────────────────────────────────────────────────
 
 func main() {
 	showVersion := flag.Bool("version", false, "print version")
 	flag.BoolVar(showVersion, "v", false, "print version")
+	clearCache := flag.Bool("clear-cache", false, "remove the local package cache and exit")
+	flag.BoolVar(clearCache, "c", false, "remove the local package cache and exit")
+	flag.Usage = func() {
+		fmt.Fprint(flag.CommandLine.Output(), `Usage: vrs [flags] [package name]
+
+A terminal UI for browsing package versions.
+
+Flags:
+  -v, --version       print version
+  -c, --clear-cache   remove the local package cache and exit
+  -h, --help          show this help
+
+Run vrs with no arguments to launch the interactive TUI.
+Pass a package name (eg. vrs ruby) to print its release list directly.
+`)
+	}
 	flag.Parse()
 	if *showVersion {
 		fmt.Println(version)
 		return
+	}
+	if *clearCache {
+		os.Exit(runClearCache())
 	}
 
 	if args := flag.Args(); len(args) > 0 {

@@ -45,12 +45,18 @@ The match is case-insensitive. If the package isn't found, `vrs` exits with stat
 
 ## Caching
 
-API responses are cached locally for 1 hour (the backend only refreshes every ~6 hours). The cache file lives at:
+API responses are cached locally for 6 hours (matching the backend's refresh cadence). The cache file lives at:
 
 - **macOS:** `~/Library/Caches/vrs/packages.json`
 - **Linux:** `~/.cache/vrs/packages.json`
 
-To force a fresh fetch, just delete the cache file.
+To force a fresh fetch, clear the cache:
+
+```sh
+vrs --clear-cache   # or -c
+```
+
+(Or just delete the cache file directly.)
 
 ## Development
 
