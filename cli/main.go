@@ -230,6 +230,7 @@ type Release struct {
 type Package struct {
 	Name         string    `json:"name"`
 	Categories   []string  `json:"categories"`
+	Aliases      []string  `json:"aliases,omitempty"`
 	SourceURL    string    `json:"sourceUrl"`
 	Latest       Release   `json:"latest"`
 	LatestStable Release   `json:"latestStable"`
@@ -880,6 +881,11 @@ func findPackage(packages []Package, query string) *Package {
 	for i := range packages {
 		if strings.EqualFold(packages[i].Name, query) {
 			return &packages[i]
+		}
+		for _, alias := range packages[i].Aliases {
+			if strings.EqualFold(alias, query) {
+				return &packages[i]
+			}
 		}
 	}
 	return nil

@@ -9,6 +9,7 @@ export interface Release {
 export interface PackageInfo {
 	name: string;
 	categories: string[];
+	aliases?: string[];
 	sourceUrl: string;
 	latest: Release | null;
 	latestStable: Release | null;
@@ -49,6 +50,7 @@ export interface PackageConfig {
 	name: string;
 	source: string;
 	categories: string[];
+	aliases?: string[];
 	url: string;
 	repo?: string;
 	gem?: string;

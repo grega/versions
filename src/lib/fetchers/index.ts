@@ -17,8 +17,11 @@ const fetchers: Record<string, (config: PackageConfig) => Promise<PackageInfo>> 
 
 export async function fetchPackage(config: PackageConfig): Promise<PackageInfo> {
 	const fetcher = fetchers[config.source];
+	const withAliases = (info: PackageInfo): PackageInfo =>
+		config.aliases?.length ? { ...info, aliases: config.aliases } : info;
+
 	if (!fetcher) {
-		return {
+		return withAliases({
 			name: config.name,
 			categories: config.categories,
 			sourceUrl: config.url,
@@ -27,13 +30,13 @@ export async function fetchPackage(config: PackageConfig): Promise<PackageInfo> 
 			releases: [],
 			fetchedAt: new Date().toISOString(),
 			error: `Unknown source: ${config.source}`
-		};
+		});
 	}
 
 	try {
-		return await fetcher(config);
+		return withAliases(await fetcher(config));
 	} catch (err) {
-		return {
+		return withAliases({
 			name: config.name,
 			categories: config.categories,
 			sourceUrl: config.url,
@@ -42,7 +45,7 @@ export async function fetchPackage(config: PackageConfig): Promise<PackageInfo> 
 			releases: [],
 			fetchedAt: new Date().toISOString(),
 			error: err instanceof Error ? err.message : String(err)
-		};
+		});
 	}
 }
 

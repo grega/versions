@@ -11,6 +11,8 @@ packages:
   - name: Go
     source: endoflife
     product: go
+    aliases:
+      - golang
     categories:
       - Languages
       - Go
@@ -18,6 +20,9 @@ packages:
 
   - name: Node.js
     source: nodejs
+    aliases:
+      - nodejs
+      - node
     categories:
       - Languages
       - Node.js
@@ -141,6 +146,8 @@ packages:
   - name: Next.js
     source: npm
     package: next
+    aliases:
+      - nextjs
     categories:
       - Frameworks
     url: https://github.com/vercel/next.js/releases
@@ -190,6 +197,9 @@ packages:
   - name: Tailwind CSS
     source: npm
     package: tailwindcss
+    aliases:
+      - tailwind
+      - tailwindcss
     categories:
       - Libraries
     url: https://github.com/tailwindlabs/tailwindcss/releases
@@ -227,6 +237,8 @@ packages:
   - name: Chart.js
     source: npm
     package: chart.js
+    aliases:
+      - chartjs
     categories: Libraries
     url: https://github.com/chartjs/Chart.js/releases
 
@@ -239,12 +251,16 @@ packages:
   - name: React Native
     source: npm
     package: react-native
+    aliases:
+      - react-native
     categories: Frameworks
     url: https://github.com/facebook/react-native/releases
 
   - name: Three.js
     source: npm
     package: three
+    aliases:
+      - threejs
     categories: Libraries
     url: https://github.com/mrdoob/three.js/releases
 
@@ -391,6 +407,8 @@ packages:
     tagReplace:
       "REL_": ""
       "_": "."
+    aliases:
+      - postgres
     categories: Databases
     url: https://www.postgresql.org/docs/release/
 
@@ -412,6 +430,8 @@ packages:
   - name: MongoDB
     source: endoflife
     product: mongodb
+    aliases:
+      - mongo
     categories: Databases
     url: https://www.mongodb.com/try/download/community
 
@@ -460,6 +480,8 @@ packages:
   - name: Kubernetes
     source: github
     repo: kubernetes/kubernetes
+    aliases:
+      - k8s
     categories: DevOps
     url: https://github.com/kubernetes/kubernetes/releases
 
@@ -524,6 +546,8 @@ packages:
   - name: dbt Core
     source: pypi
     package: dbt-core
+    aliases:
+      - dbt
     categories: Tools
     url: https://github.com/dbt-labs/dbt-core/releases
 
@@ -537,6 +561,9 @@ packages:
   - name: GitHub CLI
     source: github
     repo: cli/cli
+    aliases:
+      - gh
+      - github
     categories: Tools
     url: https://github.com/cli/cli/releases
 
